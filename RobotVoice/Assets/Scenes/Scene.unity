@@ -1744,6 +1744,13 @@ MonoBehaviour:
   fillCircle: {fileID: 1509848942}
   colorGrey: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
   colorRed: {r: 0.754717, g: 0.2171591, b: 0.2171591, a: 1}
+  resolutions:
+  - name: 16:9
+    dimension: {x: 1920, y: 1080}
+    active: 0
+  - name: 1:1
+    dimension: {x: 1080, y: 1080}
+    active: 0
   isSaving: 0
   videoDuration: 0
 --- !u!114 &1952850593
@@ -1777,11 +1784,6 @@ MonoBehaviour:
   renderTexture: {fileID: 8400000, guid: a3a6d142e1d6246f99397d431a723c76, type: 2}
   captureRawImage: {fileID: 972059142}
   cameraRenderTexture: {fileID: 2034493004}
-  resolutions:
-  - {x: 1080, y: 1920}
-  - {x: 1920, y: 1080}
-  - {x: 1668, y: 2338}
-  - {x: 2338, y: 1668}
   inFrameCommit: 0
   videoCaptureResolution: {x: -1, y: -1}
 --- !u!1 &2011293945
