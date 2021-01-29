@@ -42,8 +42,8 @@ public class ImageRecorder : MonoBehaviour
             y = Manager.singleton.cameraDevice.previewResolution.width,
             x = Manager.singleton.cameraDevice.previewResolution.height
 #else
-            x = Manager.singleton.cameraDevice.previewResolution.width;
-            y = Manager.singleton.cameraDevice.previewResolution.height;
+            x = Manager.singleton.cameraDevice.previewResolution.width,
+            y = Manager.singleton.cameraDevice.previewResolution.height
 #endif
         };
         Manager.singleton.ShowInfos(InfosType.cameraResolution, videoCaptureResolution.x + "x" + videoCaptureResolution.y);
