@@ -1,3 +1,4 @@
+using System;
 using NatSuite.Recorders;
 using NatSuite.Recorders.Clocks;
 using System.Collections;
@@ -5,6 +6,22 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+
+public class Export
+{
+    public readonly int x;
+    public readonly int y;
+    public readonly MP4Recorder recorder;
+
+    public Export(MP4Recorder recorder, Texture target)
+    {
+        this.recorder = recorder;
+        // ReSharper disable once PossibleLossOfFraction
+        x = Mathf.FloorToInt((target.width - recorder.frameSize.width) / 2);
+        // ReSharper disable once PossibleLossOfFraction
+        y = Mathf.FloorToInt((target.height - recorder.frameSize.height) / 2);
+    }
+}
 
 public class ImageRecorder : MonoBehaviour
 {
@@ -78,50 +95,75 @@ public class ImageRecorder : MonoBehaviour
         _videoFrames = new List<Texture2D>();
     }
 
-    public void Recording()
+    public void Recording(IEnumerable<MP4Recorder> recorders)
     {
         cameraRenderTexture.Render();
-        
-        var targetTexture = cameraRenderTexture.targetTexture;
-        RenderTexture.active = targetTexture;        
-        _readBackTexture.ReadPixels(new Rect(0, 0, targetTexture.width, targetTexture.height), 0, 0);
+        var ts = new FixedIntervalClock(15).timestamp;
+        RenderTexture.active = cameraRenderTexture.targetTexture;
+        foreach (var mp4Recorder in recorders)
+        {
+            var (width, height) = mp4Recorder.frameSize;
+            var sample = new Texture2D(width, height, TextureFormat.RGB24, false);
+            sample.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            mp4Recorder.CommitFrame(sample.GetPixels32(), ts);
+        }
         RenderTexture.active = null;
+        
+        /* _readBackTexture.ReadPixels(new Rect(0, 0, targetTexture.width, targetTexture.height), 0, 0);
         
         var copyOfTexture = new Texture2D(_readBackTexture.width, _readBackTexture.height, TextureFormat.RGB24, false);
         Graphics.CopyTexture(_readBackTexture, copyOfTexture);
-        _videoFrames.Add(copyOfTexture);
+        _videoFrames.Add(copyOfTexture); */
     }
 
     public IEnumerator FinishRecord(IEnumerable<MP4Recorder> recorders, FixedIntervalClock fixedIntervalClock)
     {
         inFrameCommit = true;
+        yield return null;
         
-        foreach (var mp4Recorder in recorders)
+        // var targetTexture = cameraRenderTexture.targetTexture;
+
+        /*var exports = recorders.Select(mp4Recorder => new Export(mp4Recorder, targetTexture)).ToList();
+        
+        foreach (var frame in _videoFrames)
         {
-            var targetTexture = cameraRenderTexture.targetTexture;
+            foreach (var export in exports)
+            {
+                var (width, height) = export.recorder.frameSize;
+                var pixels = Array.ConvertAll(frame.GetPixels(export.x, export.y, width, height), c => (Color32) c);
+                export.recorder.CommitFrame(pixels, fixedIntervalClock.timestamp);
+            }
+            Destroy(frame);
+            yield return null;
+        }*/
+        
+        /* foreach (var mp4Recorder in recorders)
+        {
+            var (width, height) = mp4Recorder.frameSize;
             
             // Calculate position to center record on texture recorded
-            var x = Mathf.FloorToInt((targetTexture.width - mp4Recorder.frameSize.width) / 2);
-            var y = Mathf.FloorToInt((targetTexture.height - mp4Recorder.frameSize.height) / 2);
-            
-            Debug.Log("XY of " + mp4Recorder.frameSize + " " + x + " " + y);
-            Debug.Log("Texture " + targetTexture.width + "x" + targetTexture.height);
+            // ReSharper disable once PossibleLossOfFraction
+            var x = Mathf.FloorToInt((targetTexture.width - width) / 2);
+            var size = x + width;
             
             // Save each frame on recorder
             foreach (var frame in _videoFrames)
             {
-                var pixels = frame.GetPixels(0, 0, mp4Recorder.frameSize.width, mp4Recorder.frameSize.height);
+                var pixels = frame.GetPixels32().Where((color32, i) => {
+                    var pos = i % width;
+                    return pos <= x && pos > size;
+                }).ToArray(); // frame.GetPixels(x, y, mp4Recorder.frameSize.width, mp4Recorder.frameSize.height);
                 mp4Recorder.CommitFrame(pixels, fixedIntervalClock.timestamp);
                 yield return null;
             }
-
-            Debug.Log("Finish record " + mp4Recorder.frameSize);
-        }
             
-        foreach (var videoFrame in _videoFrames)
+            // Debug.Log("Finish record " + mp4Recorder.frameSize);
+        } */
+            
+        /*foreach (var videoFrame in _videoFrames)
         {
             Destroy(videoFrame);
-        }
+        }*/
         
         inFrameCommit = false;
     }

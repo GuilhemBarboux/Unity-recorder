@@ -97,8 +97,6 @@ public class Manager : MonoBehaviour
             }, 0);
         }
 
-        resolutions[0].active = true;
-
         // Initialize recorders
         ShowInfos(InfosType.recordingStatus, "Programme Init");
         imageRecorder = GetComponent<ImageRecorder>();
@@ -208,7 +206,7 @@ public class Manager : MonoBehaviour
         imageRecorder.StartRecording();
         while (recording)
         {
-            imageRecorder.Recording();
+            imageRecorder.Recording(_recorders.Values);
             await Task.Delay(33);
         }
         clockVideo.paused = true;
@@ -225,7 +223,7 @@ public class Manager : MonoBehaviour
         imageRecorder.inFrameCommit = true;
         voiceRecorder.inRobotRecord = true;
 
-        var recorders = _recorders.Values.ToArray();
+        var recorders = _recorders.Values.ToList();
         voiceRecorder.StartRecordingChangedVoice(recorders, clockAudio);
         StartCoroutine(imageRecorder.FinishRecord(recorders, new FixedIntervalClock(15)));
         StartCoroutine(Recording());
@@ -297,8 +295,8 @@ public class Manager : MonoBehaviour
         
         foreach (var exportResolution in resolutions)
         {
-            Debug.Log("Add recorder " + exportResolution.name + " " + exportResolution.active);
-            if (!exportResolution.active) continue;
+            // Debug.Log("Add recorder " + exportResolution.name + " " + exportResolution.active);
+            // if (!exportResolution.active) continue;
             _recorders.Add(exportResolution.name, new MP4Recorder(exportResolution.dimension.x, exportResolution.dimension.y, 30, 48000, audioDevice.channelCount));
         }
     }

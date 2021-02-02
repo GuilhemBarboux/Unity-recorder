@@ -40,14 +40,14 @@ public class VoiceRecorder : MonoBehaviour
         audioSource.clip = Microphone.Start("", true, Manager.singleton.maxTimeRecord, 44100);
     }
 
-    public void StartRecordingChangedVoice(MP4Recorder[] recorders, RealtimeClock clock)
+    public void StartRecordingChangedVoice(List<MP4Recorder> recorders, RealtimeClock clock)
     {
         Microphone.End("");
         
         clock.paused = false;
         var clock2 = new RealtimeClock();
         
-        audioInputs = new List<AudioInput>(recorders.Length);
+        audioInputs = new List<AudioInput>(recorders.Count);
         
         foreach (var mp4Recorder in recorders)
         {
