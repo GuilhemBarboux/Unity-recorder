@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NatSuite.Recorders;
 using NatSuite.Recorders.Clocks;
@@ -18,7 +20,7 @@ public class VoiceRecorder : MonoBehaviour
     [HideInInspector]
     public bool inRobotRecord;
 
-    private AudioInput audioInput;
+    private List<AudioInput> audioInputs;
 
     [HideInInspector]
     public int micChannels;
@@ -41,14 +43,18 @@ public class VoiceRecorder : MonoBehaviour
     public void StartRecordingChangedVoice(MP4Recorder[] recorders, RealtimeClock clock)
     {
         Microphone.End("");
+        
         clock.paused = false;
-        audioSource.Play();
         var clock2 = new RealtimeClock();
+        
+        audioInputs = new List<AudioInput>(recorders.Length);
         
         foreach (var mp4Recorder in recorders)
         {
-            audioInput = new AudioInput(mp4Recorder, clock2, audioListener);
+            audioInputs.Add(new AudioInput(mp4Recorder, clock2, audioListener));
         }
+
+        audioSource.Play();
 
         FinishRecordingChangedVoice(Manager.singleton.videoDuration);
     }
@@ -56,7 +62,7 @@ public class VoiceRecorder : MonoBehaviour
     private async void FinishRecordingChangedVoice(float timeAudio)
     {
         await Task.Delay((int)(timeAudio * 1000)+500);
-        audioInput.Dispose();
+        audioInputs.ForEach(audioInput => audioInput.Dispose());
         audioSource.Stop();
         await Task.Delay(500);
         inRobotRecord = false;

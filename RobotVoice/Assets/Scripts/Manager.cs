@@ -28,7 +28,7 @@ public class ExportResolution
     [SerializeField]
     public Vector2Int dimension;
     [HideInInspector]
-    public bool active;
+    public bool active = true;
 }
 
 public class Manager : MonoBehaviour
@@ -97,6 +97,8 @@ public class Manager : MonoBehaviour
             }, 0);
         }
 
+        resolutions[0].active = true;
+
         // Initialize recorders
         ShowInfos(InfosType.recordingStatus, "Programme Init");
         imageRecorder = GetComponent<ImageRecorder>();
@@ -108,9 +110,8 @@ public class Manager : MonoBehaviour
         MediaDeviceQuery queryCamera = new MediaDeviceQuery(
             device => device is ICameraDevice
         );
-        Debug.Log("super");
+        
 #if UNITY_IPHONE
-        Debug.Log(queryCamera.devices.Length.ToString());
         if (queryCamera.devices.Length > 1)
         {
             Manager.singleton.cameraDevice = (ICameraDevice)queryCamera.devices[1];
@@ -121,7 +122,6 @@ public class Manager : MonoBehaviour
             Manager.singleton.cameraDevice = (ICameraDevice)queryCamera.devices[0];
         }
 #else
-        Debug.Log(queryCamera.devices.Length);
         Manager.singleton.cameraDevice = (ICameraDevice)queryCamera.devices[0];
 #endif
         // Initialize Image Recorder
@@ -226,7 +226,7 @@ public class Manager : MonoBehaviour
         voiceRecorder.inRobotRecord = true;
 
         var recorders = _recorders.Values.ToArray();
-        // voiceRecorder.StartRecordingChangedVoice(recorders, clockAudio);
+        voiceRecorder.StartRecordingChangedVoice(recorders, clockAudio);
         StartCoroutine(imageRecorder.FinishRecord(recorders, new FixedIntervalClock(15)));
         StartCoroutine(Recording());
     }
@@ -238,25 +238,35 @@ public class Manager : MonoBehaviour
         SaveVideo();
     }
 
+    private static async Task<string> SaveMp4(IMediaRecorder item)
+    {
+        return await item.FinishWriting();
+    }
+
     private async void SaveVideo()
     {
         ShowInfos(InfosType.recordingStatus, "Saving Video");
 
-        // Save paths
-        var paths = new Dictionary<string, string>();
-        foreach (var r in _recorders)
+        var listOfTasks = _recorders.Select(r => SaveMp4(r.Value)).ToList();
+        var paths = await Task.WhenAll(listOfTasks);
+        
+        foreach (var path in paths)
         {
-            paths[r.Key] = await r.Value.FinishWriting();
+            Debug.Log("Path of video " + path);
         }
-        Debug.Log(paths.ToString());
+        
+        ShowInfos(InfosType.recordingStatus, "All Video are saved");
         
         // Share medias files on sharing system
 #if UNITY_IPHONE
         var sp = new SharePayload();
+        
         foreach (var path in paths)
         {
-            await sp.AddMedia(path.Value).Commit();
+            sp.AddMedia(path);
         }
+
+        await sp.Commit();
 #endif
         
         DisposeVideo();
@@ -276,9 +286,7 @@ public class Manager : MonoBehaviour
 
     private IEnumerator LoadRecorder()
     {
-        Debug.Log("before wait");
         yield return new WaitUntil(() => voiceRecorder.micChannels != -1 && imageRecorder.videoCaptureResolution.x != -1);
-        Debug.Log("after wait");
         CreateRecorder();
         ShowInfos(InfosType.recordingStatus, "Ready For Capture");
     }
@@ -289,10 +297,9 @@ public class Manager : MonoBehaviour
         
         foreach (var exportResolution in resolutions)
         {
-            if (exportResolution.active)
-            {
-                _recorders.Add(exportResolution.name, new MP4Recorder(exportResolution.dimension.x, exportResolution.dimension.y, 30, 48000, audioDevice.channelCount));
-            }
+            Debug.Log("Add recorder " + exportResolution.name + " " + exportResolution.active);
+            if (!exportResolution.active) continue;
+            _recorders.Add(exportResolution.name, new MP4Recorder(exportResolution.dimension.x, exportResolution.dimension.y, 30, 48000, audioDevice.channelCount));
         }
     }
 

@@ -2,6 +2,7 @@ using NatSuite.Recorders;
 using NatSuite.Recorders.Clocks;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -91,28 +92,35 @@ public class ImageRecorder : MonoBehaviour
         _videoFrames.Add(copyOfTexture);
     }
 
-    public IEnumerator FinishRecord(MP4Recorder[] recorders, FixedIntervalClock fixedIntervalClock)
+    public IEnumerator FinishRecord(IEnumerable<MP4Recorder> recorders, FixedIntervalClock fixedIntervalClock)
     {
         inFrameCommit = true;
-        Debug.Log("Okai !" + recorders.Length);
+        
         foreach (var mp4Recorder in recorders)
         {
             var targetTexture = cameraRenderTexture.targetTexture;
             
             // Calculate position to center record on texture recorded
-            var x = (targetTexture.width - mp4Recorder.frameSize.width) / 2 ;
-            var y = (targetTexture.height - mp4Recorder.frameSize.height) / 2;
-
-            Debug.Log(mp4Recorder.frameSize);
+            var x = Mathf.FloorToInt((targetTexture.width - mp4Recorder.frameSize.width) / 2);
+            var y = Mathf.FloorToInt((targetTexture.height - mp4Recorder.frameSize.height) / 2);
+            
+            Debug.Log("XY of " + mp4Recorder.frameSize + " " + x + " " + y);
+            Debug.Log("Texture " + targetTexture.width + "x" + targetTexture.height);
             
             // Save each frame on recorder
             foreach (var frame in _videoFrames)
             {
-                var pixels = frame.GetPixels(x, y, mp4Recorder.frameSize.width, mp4Recorder.frameSize.height);
+                var pixels = frame.GetPixels(0, 0, mp4Recorder.frameSize.width, mp4Recorder.frameSize.height);
                 mp4Recorder.CommitFrame(pixels, fixedIntervalClock.timestamp);
-                Destroy(frame);
                 yield return null;
             }
+
+            Debug.Log("Finish record " + mp4Recorder.frameSize);
+        }
+            
+        foreach (var videoFrame in _videoFrames)
+        {
+            Destroy(videoFrame);
         }
         
         inFrameCommit = false;
