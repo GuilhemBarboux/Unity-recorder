@@ -17,7 +17,7 @@ namespace NatSuite.Examples.Components {
 		public Image button, countdown;
 		public UnityEvent onTouchDown, onTouchUp;
 		private bool pressed;
-		private const float MaxRecordingTime = 10f; // seconds
+		private const float MaxRecordingTime = 120f; // seconds
 
 		private void Start () => Reset();
 

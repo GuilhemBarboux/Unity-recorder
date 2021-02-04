@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NatSuite.Devices;
 using NatSuite.Recorders;
@@ -9,9 +10,11 @@ using NatSuite.Recorders.Clocks;
 using NatSuite.Recorders.Inputs;
 using NatSuite.Sharing;
 using Unity.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
+using UnityEngine.XR.ARSubsystems;
 
 namespace Record
 {
@@ -29,8 +32,7 @@ namespace Record
         [SerializeField] private Camera renderCamera;
         [SerializeField] private GameObject button;
         [SerializeField] private MediaExport[] exports;
-        // [SerializeField] private int maxDuration = 300;
-        private List<AudioInput> audioInputs; // Audio input for recording video
+        [SerializeField] private int latencyMS = 1000;
         private List<CameraInput> cameraInputs; // Camera input for recording video
         private List<MP4Recorder> recorders; // Recorder that will record an MP4
         
@@ -38,106 +40,144 @@ namespace Record
         private bool ready; // Ready to new record
 
         private IClock clock;
+        private float timeStart;
 
         private void Awake()
         {
             recorders = new List<MP4Recorder>();
             cameraInputs = new List<CameraInput>();
 
-
-            if (microphoneSource == null)
-            {
-                microphoneSource = new AudioSource {loop = true};
-            }
+            if (microphoneSource == null) microphoneSource = new AudioSource();
+            
+            microphoneSource.mute = true;
+            microphoneSource.loop = true;
+            microphoneSource.bypassEffects = false;
+            microphoneSource.bypassListenerEffects = false;
         }
 
         private IEnumerator Start()
         {
-            // Enable and disable microphone to avoid lag on ios
-            microphoneSource.clip = Microphone.Start(null, true, 1, AudioSettings.outputSampleRate);
+            // Start record microphone in a loop
+            microphoneSource.clip = Microphone.Start(null, true, 10, AudioSettings.outputSampleRate);
             yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
-            Microphone.End(null);
+            microphoneSource.Play();
             
             // Activate button
             button.SetActive(true);
-        }
-        private void Update()
-        {
-            if (Microphone.GetPosition(null) > 0 && !microphoneSource.isPlaying)
-            {
-                microphoneSource.Play();
-            }
+            
+            // App ready to start record
+            ready = true;
         }
 
         private void OnDestroy () {
             // Stop microphone
-            microphoneSource.Stop();
+            if (microphoneSource != null) microphoneSource.Stop();
             Microphone.End(null);
         }
 
         private void OnAudioFilterRead (float[] data, int channels)
         {
-            if (!recording) return;
-            
-            foreach (var mp4Recorder in recorders)
+            if (recording)
             {
-                mp4Recorder.CommitSamples(data, clock.timestamp);
+                // Save audio sample on all recorders
+                try
+                {
+                    foreach (var mp4Recorder in recorders)
+                    {
+                        mp4Recorder.CommitSamples(data, clock.timestamp);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
             
+            // Mute sound to avoid voice return
+            // TODO : on play video, don't mute
             Array.Clear(data, 0, data.Length);
         }
 
         public void StartRecording()
         {
-            if (ready) return;
-            recording = true;
+            if (!ready) return;
             ready = false;
             
             // Start microphone
-            microphoneSource.clip = Microphone.Start(null, true, 300, AudioSettings.outputSampleRate);
+            microphoneSource.mute = false;
             
             // Create the MP4 recorder
-            clock = new RealtimeClock();
             CreateRecorder();
             
+            // Save timestart to replay video time
+            timeStart = Time.time;
+            
             // Create audio and camera input
+            clock = new RealtimeClock();
             foreach (var mp4Recorder in recorders)
             {
                 cameraInputs.Add(new CameraInput(mp4Recorder, clock, renderCamera));
             }
+            
+            // Start recording
+            recording = true;
         }
 
         public async void StopRecording()
         {  
-            // Stop microphone
+            // Stop recording
             recording = false;
-            Microphone.End(null);
+            var duration = (Time.time - timeStart) * 1000;
+            
+            // Stop Microphone
+            microphoneSource.mute = true;
+            
+            // Wait finish rendering scene
+            await Task.Run(() => new WaitForEndOfFrame());
             
             // Stop streaming media to the recorder
             cameraInputs.ForEach(ci => ci.Dispose());
             
             // Finish writing video
-            var paths = await Task.WhenAll(recorders.Select(item => item.FinishWriting()).ToList());
+            var paths = new string[0];
+            try
+            {
+                paths = await Task.WhenAll(recorders.Select(item => item.FinishWriting()).ToList());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            
+            // Clear List
+            recorders.Clear();
+            cameraInputs.Clear();
 
             // Share medias
+            if (paths.Length > 0)
+            {
 #if UNITY_IPHONE && !UNITY_EDITOR
-            var sp = new SharePayload();
-            foreach (var path in paths) sp.AddMedia(path);
-            await sp.Commit();
-#else            
-            foreach (var path in paths) Debug.Log(path);
+                Handheld.PlayFullScreenMovie($"file://{paths[0]}");
+                var sp = new SharePayload();
+                foreach (var path in paths) sp.AddMedia(path);
+                await Task.Delay((int)duration);
+                await sp.Commit();
+#else
+                Debug.Log("Duration " + duration);
+                foreach (var path in paths) Debug.Log(path);
 #endif
-            // Clear List
-            cameraInputs.Clear();
+            }
+            else
+            {
+                // TODO : display Error
+            }
             
             // Reset recorders
-            CreateRecorder();
             ready = true;
         }
 
         private void CreateRecorder()
         {
-            recorders.Clear();
             foreach (var export in exports)
             {
                 if (!export.active) continue;
