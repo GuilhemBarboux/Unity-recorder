@@ -8,12 +8,15 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Scene.unity
     guid: d0d9afa237204a042aff1b0acb14a148
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Record.unity
     guid: dc6db6bde641d4c2093012c7df691317
   - enabled: 0
     path: Assets/NatSuite/Examples/HotMic/HotMic.unity
     guid: 0a3d24f972b7e40b29c4366de74076f4
+  - enabled: 1
+    path: Assets/Scenes/AR.unity
+    guid: d1c3109bdb54ad54c8a2b2838528e640
   m_configObjects:
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 392741dd81a79450c9a8ee193271fe66, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: a7db8fd14fb5044d09959ba9475618f7, type: 2}
