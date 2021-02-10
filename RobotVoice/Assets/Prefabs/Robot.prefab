@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 517013327818464602}
-  - component: {fileID: 517013327818464603}
   - component: {fileID: 517013327818464604}
   m_Layer: 0
   m_Name: Robot
@@ -33,19 +32,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &517013327818464603
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 517013327818464605}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d87bd45cfc214ce48ce8b882225dd11, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_DestroyOnRemoval: 1
 --- !u!114 &517013327818464604
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,11 +48,15 @@ MonoBehaviour:
   eyeLeft: {fileID: 5783713451064011303}
   mouthUp: {fileID: 7774044542240913328}
   mouthDown: {fileID: 7180269782420914688}
+  head: {fileID: 8135781369095143591}
   eyeRightMaterial: {fileID: 2100000, guid: 7c9328a523fab4383b6da12850874752, type: 2}
   eyeLeftMaterial: {fileID: 2100000, guid: 78383c57142ba104a9828fde93869f98, type: 2}
-  eyeRotationCoefficient: 8
-  mouthRotationCoefficient: 16
-  eyeIntensityMin: 0
+  eyeRotationCoefficient: 20
+  mouthRotationCoefficient: 32
+  intensityCoefficient: 40
+  eyeIntensityMin: 0.75
+  eyeInRotationCoefficient: 0.6
+  mouthUpCoefficient: 0.5
 --- !u!1001 &517013326899145630
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -142,6 +132,10 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 2aed421936d1d0a4aa6b5f8232cd7029, type: 2}
+    - target: {fileID: -2917456342184399974, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: d45f1127c9bd7874982cafb1409a107c, type: 2}
     - target: {fileID: -2658282512704441099, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -166,6 +160,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ROBOT_SUBSTANCE
       objectReference: {fileID: 0}
+    - target: {fileID: 1409670601477889276, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: d45f1127c9bd7874982cafb1409a107c, type: 2}
     - target: {fileID: 1745041902552288884, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -195,6 +193,11 @@ PrefabInstance:
 --- !u!4 &46854162554162293 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
+  m_PrefabInstance: {fileID: 517013326899145630}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8135781369095143591 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8630259101070207801, guid: c9751f71ee25ef040913e75e3e242ca0, type: 3}
   m_PrefabInstance: {fileID: 517013326899145630}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &5783713451064011303 stripped

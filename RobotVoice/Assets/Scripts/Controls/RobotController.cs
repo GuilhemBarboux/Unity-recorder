@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using AR;
@@ -10,7 +11,6 @@ using UnityEngine.XR.ARKit;
 
 namespace Controls
 {
-    [RequireComponent(typeof(ARFace))]
     public class RobotController : MonoBehaviour
     {
         // Robot meshs
@@ -18,21 +18,25 @@ namespace Controls
         [SerializeField] private Transform eyeLeft;
         [SerializeField] private Transform mouthUp;
         [SerializeField] private Transform mouthDown;
+        [SerializeField] private Transform head;
 
         // Robot material
         [SerializeField] private Material eyeRightMaterial;
         [SerializeField] private Material eyeLeftMaterial;
 
         // Movement coefficients
-        [SerializeField] private float eyeRotationCoefficient = 8;
-        [SerializeField] private float mouthRotationCoefficient = 16;
+        [SerializeField] public float eyeRotationCoefficient = 20;
+        [SerializeField] public float mouthRotationCoefficient = 32;
+        [SerializeField] [Range(0, 100)] 
+        public float intensityCoefficient = 1;
+        [SerializeField] [Range(0, 1)] 
+        public float eyeIntensityMin = 0.85f;
+        [SerializeField] [Range(0, 1)] 
+        public float eyeInRotationCoefficient = 0.6f;
+        [SerializeField] [Range(0, 1)] 
+        public float mouthUpCoefficient = 0.6f;
 
-        [SerializeField]
-        [Range(0, 1)]
-        private float eyeIntensityMin = 0;
-        
         // Blend shapes from ARKIT
-        private ARFace face;
         public readonly Dictionary<ARKitBlendShapeLocation, float> shapeWeights = new Dictionary<ARKitBlendShapeLocation, float>
         {
             // Left eye
@@ -48,28 +52,26 @@ namespace Controls
             // Blink
             { ARKitBlendShapeLocation.EyeBlinkLeft, 0 },
             { ARKitBlendShapeLocation.EyeBlinkRight, 0 },
+            { ARKitBlendShapeLocation.EyeWideLeft, 0 },
+            { ARKitBlendShapeLocation.EyeWideRight, 0 },
             
             // Jaw open
             { ARKitBlendShapeLocation.JawOpen, 0 },
             { ARKitBlendShapeLocation.MouthClose, 0 }
         };
-#if UNITY_IPHONE
-        private ARKitFaceSubsystem arKitFaceSubsystem;
-#endif
         
         // Inital states
         private Quaternion eyeLeftRotation;
         private Quaternion eyeRightRotation;
         private Quaternion mouthUpRotation;
         private Quaternion mouthDownRotation;
+        private Quaternion headRotation;
         private Color eyeLeftColor;
         private Color eyeRightColor;
         private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
 
         private void Awake()
         {
-            face = GetComponent<ARFace>();
-            
             // Initial eyes rotations
             var leftRotation = eyeLeft.rotation;
             eyeLeftRotation = new Quaternion(leftRotation.x, leftRotation.y, leftRotation.z, leftRotation.w);
@@ -85,7 +87,30 @@ namespace Controls
             mouthUpRotation = new Quaternion(muRotation.x, muRotation.y, muRotation.z, muRotation.w);
             var mdRotation = mouthDown.rotation;
             mouthDownRotation = new Quaternion(mdRotation.x, mdRotation.y, mdRotation.z, mdRotation.w);
+            
+            // Initial head rotation
+            var hRotation = head.rotation;
+            headRotation = new Quaternion(hRotation.x, hRotation.y, hRotation.z, hRotation.w);
         }
+        
+        /* private IEnumerator Start() {
+            if (ARSession.state == ARSessionState.None || ARSession.state == ARSessionState.CheckingAvailability)
+            {
+                yield return ARSession.CheckAvailability();
+            }
+
+            if (ARSession.state == ARSessionState.Unsupported)
+            {
+                // Start some fallback experience for unsupported devices
+                Debug.Log("AR session isn't supported");
+            }
+            else
+            {
+                // Start the AR session
+                session.enabled = true;
+                Debug.Log("AR session is " + ARSession.state);
+            }
+        } */
 
         private void OnDestroy()
         {
@@ -93,45 +118,26 @@ namespace Controls
             eyeRightMaterial.SetColor(EmissionColor, eyeRightColor);
         }
 
-        private void OnEnable()
+        public void SetBlendShapes(NativeArray<ARKitBlendShapeCoefficient> blendShapes)
         {
-            var faceManager = FindObjectOfType<ARFaceManager>();
-            if (faceManager == null) return;
-
-#if UNITY_IPHONE
-            arKitFaceSubsystem = (ARKitFaceSubsystem) faceManager.subsystem;
-#endif
-            face.updated += OnFaceUpdated;
-            ARSession.stateChanged += OnSessionStateChanged;
-        }
-
-        private void OnDisable()
-        {
-            face.updated -= OnFaceUpdated;
-            ARSession.stateChanged -= OnSessionStateChanged;
-        }
-
-        private void OnFaceUpdated(ARFaceUpdatedEventArgs arFaceUpdatedEventArgs)
-        {
-#if UNITY_IPHONE
-            using var blendShapes = arKitFaceSubsystem.GetBlendShapeCoefficients(face.trackableId, Allocator.Temp);
             foreach (var blendShape in blendShapes.Where(blendShape => shapeWeights.ContainsKey(blendShape.blendShapeLocation)))
             {
                 shapeWeights[blendShape.blendShapeLocation] = blendShape.coefficient;
             }
-#endif
         }
 
-        private void OnSessionStateChanged(ARSessionStateChangedEventArgs arSessionStateChangedEventArgs)
+        public void SetHeadRotation(Vector3 rotation)
         {
+            head.rotation = headRotation;
+            head.Rotate(rotation);
         }
 
         private void Update()
         {
             // Eyes rotations
             var leftEyeZ = shapeWeights[ARKitBlendShapeLocation.EyeLookOutLeft] -
-                           shapeWeights[ARKitBlendShapeLocation.EyeLookInLeft];
-            var rightEyeZ = shapeWeights[ARKitBlendShapeLocation.EyeLookInRight] -
+                           shapeWeights[ARKitBlendShapeLocation.EyeLookInLeft] * eyeInRotationCoefficient;
+            var rightEyeZ = shapeWeights[ARKitBlendShapeLocation.EyeLookInRight] * eyeInRotationCoefficient -
                             shapeWeights[ARKitBlendShapeLocation.EyeLookOutRight];
             
             var leftEyeX = shapeWeights[ARKitBlendShapeLocation.EyeLookDownLeft] -
@@ -146,18 +152,16 @@ namespace Controls
             eyeRight.Rotate(360 + rightEyeX * eyeRotationCoefficient, 0, 360 + rightEyeZ * eyeRotationCoefficient);
 
             // Eyes colors
-            var leftIntensity = eyeIntensityMin +
-                                (1 - eyeIntensityMin) * shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft];
-            var rightIntensity = eyeIntensityMin +
-                                (1 - eyeIntensityMin) * shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight];
-            eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * leftIntensity);
-            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * rightIntensity);
+            var leftIntensity = Mathf.Min(eyeIntensityMin + shapeWeights[ARKitBlendShapeLocation.EyeWideLeft] * shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft] * intensityCoefficient, 1f);
+            var rightIntensity = Mathf.Min(eyeIntensityMin + shapeWeights[ARKitBlendShapeLocation.EyeWideRight] * shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight] * intensityCoefficient, 1f);
+            eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * Mathf.Min(eyeIntensityMin + leftIntensity, 1.0f));
+            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * Mathf.Min(eyeIntensityMin + rightIntensity, 1.0f));
             
             // Mouth
-            var mouseOpen = Math.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -
+            var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -
                                      shapeWeights[ARKitBlendShapeLocation.MouthClose], 0);
             mouthUp.rotation = mouthUpRotation;
-            mouthUp.Rotate(360 - mouseOpen * mouthRotationCoefficient * 0.2f, 0, 0);
+            mouthUp.Rotate(360 - mouseOpen * mouthRotationCoefficient * mouthUpCoefficient, 0, 0);
             mouthDown.rotation = mouthDownRotation;
             mouthDown.Rotate(360 + mouseOpen * mouthRotationCoefficient, 0, 0);
         }

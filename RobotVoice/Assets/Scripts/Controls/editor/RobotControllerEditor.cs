@@ -23,7 +23,9 @@ namespace Controls.editor
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-
+            
+            EditorGUILayout.LabelField("ARkit debug", EditorStyles.boldLabel);
+            
             foreach (var weight in ctrl.shapeWeights)
             {
                 shapeValues[weight.Key] = EditorGUILayout.Slider(weight.Key.ToString(), weight.Value, 0, 1);
