@@ -2,6 +2,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARKit;
+using UnityEngine.XR.ARSubsystems;
 
 namespace Controls
 {
@@ -10,7 +11,6 @@ namespace Controls
     {
         private ARFace face;
         private RobotController[] robots;
-        private Vector3 rotation;
 
 #if UNITY_IPHONE
         private ARKitFaceSubsystem arKitFaceSubsystem;
@@ -19,8 +19,6 @@ namespace Controls
         {
             face = GetComponent<ARFace>();
             robots = FindObjectsOfType<RobotController>();
-            rotation = transform.rotation.eulerAngles;
-            Debug.Log(rotation);
         }
 
         private void OnEnable()
@@ -42,7 +40,7 @@ namespace Controls
             foreach (var robotController in robots)
             {
                 robotController.SetBlendShapes(blendShapes);
-                robotController.SetHeadRotation(transform.rotation.eulerAngles);
+                robotController.SetHeadRotation(transform.localEulerAngles);
             }
 #endif
         }

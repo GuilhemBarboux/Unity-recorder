@@ -475,6 +475,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 517013327818464604, guid: daee274ea1d4a472fa7d4c514d287fa2, type: 3}
+      propertyPath: intensityCoefficient
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 517013327818464605, guid: daee274ea1d4a472fa7d4c514d287fa2, type: 3}
       propertyPath: m_Name
       value: Robot
@@ -626,7 +630,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2094031060}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e3c44306fb1e439a9f18b2212b8ab70, type: 3}
   m_Name: 

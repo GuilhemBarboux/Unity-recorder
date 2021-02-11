@@ -33,7 +33,7 @@ public class Configurator : MonoBehaviour
     {
         mouth.value = robot.mouthRotationCoefficient;
         eyes.value = robot.eyeRotationCoefficient;
-        intensity.value = robot.intensityCoefficient;
+        intensity.value = robot.intensityCoefficient * 100f;
         
         foreach (var robotShapeWeight in robot.shapeWeights)
         {
@@ -65,7 +65,7 @@ public class Configurator : MonoBehaviour
     public void UpdateIntensity()
     {
         if (robot == null) return;
-        robot.intensityCoefficient = intensity.value;
+        robot.intensityCoefficient = intensity.value / 100;
         intensityValue.text = intensity.value.ToString(CultureInfo.InvariantCulture);
     }
 

@@ -53,7 +53,7 @@ MonoBehaviour:
   eyeLeftMaterial: {fileID: 2100000, guid: 78383c57142ba104a9828fde93869f98, type: 2}
   eyeRotationCoefficient: 20
   mouthRotationCoefficient: 32
-  intensityCoefficient: 40
+  intensityCoefficient: 0.2
   eyeIntensityMin: 0.75
   eyeInRotationCoefficient: 0.6
   mouthUpCoefficient: 0.5

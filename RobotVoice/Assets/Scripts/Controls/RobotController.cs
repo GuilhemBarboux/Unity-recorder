@@ -27,8 +27,8 @@ namespace Controls
         // Movement coefficients
         [SerializeField] public float eyeRotationCoefficient = 20;
         [SerializeField] public float mouthRotationCoefficient = 32;
-        [SerializeField] [Range(0, 100)] 
-        public float intensityCoefficient = 1;
+        [SerializeField] [Range(0, 1)] 
+        public float intensityCoefficient = 0.2f;
         [SerializeField] [Range(0, 1)] 
         public float eyeIntensityMin = 0.85f;
         [SerializeField] [Range(0, 1)] 
@@ -152,8 +152,8 @@ namespace Controls
             eyeRight.Rotate(360 + rightEyeX * eyeRotationCoefficient, 0, 360 + rightEyeZ * eyeRotationCoefficient);
 
             // Eyes colors
-            var leftIntensity = Mathf.Min(eyeIntensityMin + shapeWeights[ARKitBlendShapeLocation.EyeWideLeft] * shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft] * intensityCoefficient, 1f);
-            var rightIntensity = Mathf.Min(eyeIntensityMin + shapeWeights[ARKitBlendShapeLocation.EyeWideRight] * shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight] * intensityCoefficient, 1f);
+            var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
+            var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
             eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * Mathf.Min(eyeIntensityMin + leftIntensity, 1.0f));
             eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * Mathf.Min(eyeIntensityMin + rightIntensity, 1.0f));
             
