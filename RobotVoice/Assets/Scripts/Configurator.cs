@@ -20,6 +20,9 @@ public class Configurator : MonoBehaviour
     [SerializeField] private Text eyesValue;
     [SerializeField] private Slider intensity;
     [SerializeField] private Text intensityValue;
+    [SerializeField] private Transform headRotation;
+    [SerializeField] private Transform intialHeadRotation;
+    [SerializeField] private Vector3 headMove;
 
     private readonly Dictionary<ARKitBlendShapeLocation, Indicator> indicators =
         new Dictionary<ARKitBlendShapeLocation, Indicator>();
@@ -33,7 +36,9 @@ public class Configurator : MonoBehaviour
     {
         mouth.value = robot.mouthRotationCoefficient;
         eyes.value = robot.eyeRotationCoefficient;
-        intensity.value = robot.intensityCoefficient * 100f;
+        intensity.value = robot.intensityCoefficient * 10f;
+        intialHeadRotation.rotation = robot.head.rotation;
+        headRotation.rotation = robot.head.localRotation;
         
         foreach (var robotShapeWeight in robot.shapeWeights)
         {
@@ -65,7 +70,7 @@ public class Configurator : MonoBehaviour
     public void UpdateIntensity()
     {
         if (robot == null) return;
-        robot.intensityCoefficient = intensity.value / 100;
+        robot.intensityCoefficient = intensity.value / 10;
         intensityValue.text = intensity.value.ToString(CultureInfo.InvariantCulture);
     }
 
@@ -75,6 +80,10 @@ public class Configurator : MonoBehaviour
         {
             indicators[robotShapeWeight.Key].value.text = robotShapeWeight.Value.ToString(CultureInfo.InvariantCulture);
         }
+#if UNITY_EDITOR
+        robot.SetHeadRotation(Quaternion.Euler(headMove));
+#endif
+        headRotation.rotation = robot.head.localRotation;
     }
 
     public void Toggle()

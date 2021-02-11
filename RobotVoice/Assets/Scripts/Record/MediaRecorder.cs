@@ -32,7 +32,6 @@ namespace Record
         [SerializeField] private Camera renderCamera;
         [SerializeField] private GameObject button;
         [SerializeField] private MediaExport[] exports;
-        [SerializeField] private int latencyMS = 1000;
         private List<CameraInput> cameraInputs; // Camera input for recording video
         private List<MP4Recorder> recorders; // Recorder that will record an MP4
         

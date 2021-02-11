@@ -18,7 +18,9 @@ namespace Controls
         [SerializeField] private Transform eyeLeft;
         [SerializeField] private Transform mouthUp;
         [SerializeField] private Transform mouthDown;
-        [SerializeField] private Transform head;
+        [SerializeField] public Transform head;
+        [SerializeField] public Transform body;
+        [SerializeField] public Transform neck;
 
         // Robot material
         [SerializeField] private Material eyeRightMaterial;
@@ -27,10 +29,10 @@ namespace Controls
         // Movement coefficients
         [SerializeField] public float eyeRotationCoefficient = 20;
         [SerializeField] public float mouthRotationCoefficient = 32;
-        [SerializeField] [Range(0, 1)] 
-        public float intensityCoefficient = 0.2f;
-        [SerializeField] [Range(0, 1)] 
-        public float eyeIntensityMin = 0.85f;
+        [SerializeField] [Range(0, 10)] 
+        public float intensityCoefficient = 1f;
+        [SerializeField] [Range(0, 10)] 
+        public float eyeIntensityMin = 9f;
         [SerializeField] [Range(0, 1)] 
         public float eyeInRotationCoefficient = 0.6f;
         [SerializeField] [Range(0, 1)] 
@@ -52,8 +54,6 @@ namespace Controls
             // Blink
             { ARKitBlendShapeLocation.EyeBlinkLeft, 0 },
             { ARKitBlendShapeLocation.EyeBlinkRight, 0 },
-            { ARKitBlendShapeLocation.EyeWideLeft, 0 },
-            { ARKitBlendShapeLocation.EyeWideRight, 0 },
             
             // Jaw open
             { ARKitBlendShapeLocation.JawOpen, 0 },
@@ -66,6 +66,8 @@ namespace Controls
         private Quaternion mouthUpRotation;
         private Quaternion mouthDownRotation;
         private Quaternion headRotation;
+        private Quaternion neckRotation;
+        private Quaternion bodyRotation;
         private Color eyeLeftColor;
         private Color eyeRightColor;
         private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
@@ -73,24 +75,30 @@ namespace Controls
         private void Awake()
         {
             // Initial eyes rotations
-            var leftRotation = eyeLeft.rotation;
+            var leftRotation = eyeLeft.localRotation;
             eyeLeftRotation = new Quaternion(leftRotation.x, leftRotation.y, leftRotation.z, leftRotation.w);
-            var rightRotation = eyeRight.rotation;
+            var rightRotation = eyeRight.localRotation;
             eyeRightRotation = new Quaternion(rightRotation.x, rightRotation.y, rightRotation.z, rightRotation.w);
             
             // Initial eyes emissive color
+            eyeLeftMaterial.EnableKeyword("_EMISSION");
+            eyeRightMaterial.EnableKeyword("_EMISSION");
             eyeLeftColor = eyeLeftMaterial.GetColor(EmissionColor);
             eyeRightColor = eyeRightMaterial.GetColor(EmissionColor);
             
             // Initial mouth rotations
-            var muRotation = mouthUp.rotation;
+            var muRotation = mouthUp.localRotation;
             mouthUpRotation = new Quaternion(muRotation.x, muRotation.y, muRotation.z, muRotation.w);
-            var mdRotation = mouthDown.rotation;
+            var mdRotation = mouthDown.localRotation;
             mouthDownRotation = new Quaternion(mdRotation.x, mdRotation.y, mdRotation.z, mdRotation.w);
             
             // Initial head rotation
-            var hRotation = head.rotation;
+            var hRotation = head.localRotation;
             headRotation = new Quaternion(hRotation.x, hRotation.y, hRotation.z, hRotation.w);
+            var nRotation = neck.localRotation;
+            neckRotation = new Quaternion(nRotation.x, nRotation.y, nRotation.z, nRotation.w);
+            var bRotation = body.localRotation;
+            bodyRotation = new Quaternion(bRotation.x, bRotation.y, bRotation.z, bRotation.w);
         }
         
         /* private IEnumerator Start() {
@@ -126,10 +134,13 @@ namespace Controls
             }
         }
 
-        public void SetHeadRotation(Vector3 rotation)
+        public void SetHeadRotation(Quaternion rotation)
         {
-            head.rotation = headRotation;
-            head.Rotate(rotation);
+            var inverse = Quaternion.Inverse(rotation);
+            head.localRotation = headRotation * inverse;
+
+            // neck.localRotation = neckRotation * Quaternion.Euler(new Vector3(inverse.eulerAngles.x * 0.05f, inverse.eulerAngles.y * 0.35f, 0));
+            // body.localRotation = bodyRotation * Quaternion.Euler(new Vector3(0 , inverse.eulerAngles.y * 0.1f, 0));
         }
 
         private void Update()
@@ -144,25 +155,26 @@ namespace Controls
                        shapeWeights[ARKitBlendShapeLocation.EyeLookUpLeft];
             var rightEyeX = shapeWeights[ARKitBlendShapeLocation.EyeLookDownRight] -
                            shapeWeights[ARKitBlendShapeLocation.EyeLookUpRight];
-
-            eyeLeft.rotation = eyeLeftRotation;
+            
+            eyeLeft.localRotation = eyeLeftRotation; // z because eyes rig is rotate
             eyeLeft.Rotate(360 + leftEyeX * eyeRotationCoefficient, 0, 360 + leftEyeZ * eyeRotationCoefficient);
             
-            eyeRight.rotation = eyeRightRotation;
+            eyeRight.localRotation = eyeRightRotation; // z because eyes rig is rotate
             eyeRight.Rotate(360 + rightEyeX * eyeRotationCoefficient, 0, 360 + rightEyeZ * eyeRotationCoefficient);
 
             // Eyes colors
-            var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
-            var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
-            eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * Mathf.Min(eyeIntensityMin + leftIntensity, 1.0f));
-            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * Mathf.Min(eyeIntensityMin + rightIntensity, 1.0f));
+            // var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
+            // var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
+            // Debug.Log(eyeIntensityMin + " " + leftIntensity);
+            // eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * (eyeIntensityMin + leftIntensity));
+            // eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + intensityCoefficient));
             
             // Mouth
             var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -
                                      shapeWeights[ARKitBlendShapeLocation.MouthClose], 0);
-            mouthUp.rotation = mouthUpRotation;
+            mouthUp.localRotation = mouthUpRotation;
             mouthUp.Rotate(360 - mouseOpen * mouthRotationCoefficient * mouthUpCoefficient, 0, 0);
-            mouthDown.rotation = mouthDownRotation;
+            mouthDown.localRotation = mouthDownRotation;
             mouthDown.Rotate(360 + mouseOpen * mouthRotationCoefficient, 0, 0);
         }
     }
