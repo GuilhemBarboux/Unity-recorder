@@ -11,7 +11,7 @@ simd_float4 GetFaceRotation(NativeFace* nativeFace)
     ARFaceAnchor* faceAnchor = (__bridge ARFaceAnchor*)nativeFace->anchor;
 
     // Flip handedness
-    const simd_float3x3 rotation = simd_matrix(
+    const simd_float3x3 rotation = simd_matrix(                                                                                        
          faceAnchor.transform.columns[0].xyz,
          faceAnchor.transform.columns[1].xyz,
         -faceAnchor.transform.columns[2].xyz);

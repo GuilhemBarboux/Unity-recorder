@@ -162,11 +162,10 @@ namespace Controls
             eyeRight.Rotate(360 + rightEyeX * eyeRotationCoefficient, 0, 360 + rightEyeZ * eyeRotationCoefficient);
 
             // Eyes colors
-            // var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
-            // var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
-            // Debug.Log(eyeIntensityMin + " " + leftIntensity);
-            // eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * (eyeIntensityMin + leftIntensity));
-            // eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + intensityCoefficient));
+            var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
+            var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
+            eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * (eyeIntensityMin + leftIntensity));
+            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + rightIntensity));
             
             // Mouth
             var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -
