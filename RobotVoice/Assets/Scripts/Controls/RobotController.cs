@@ -138,8 +138,8 @@ namespace Controls
         {
             var inverse = Quaternion.Inverse(rotation);
             head.localRotation = headRotation * inverse;
-            neck.localRotation = neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.75f);
-            body.localRotation = bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.95f);
+            neck.localRotation = neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f);
+            body.localRotation = bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.9f);
         }
 
         private void Update()

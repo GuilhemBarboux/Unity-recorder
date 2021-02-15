@@ -39,6 +39,7 @@ namespace Record
         private bool ready; // Ready to new record
 
         private IClock clock;
+        private IClock AudioClock;
         private float timeStart;
 
         private void Awake()
@@ -48,19 +49,19 @@ namespace Record
 
             if (microphoneSource == null) microphoneSource = new AudioSource();
             
-            microphoneSource.mute = true;
-            microphoneSource.loop = true;
+            microphoneSource.mute = false;
+            microphoneSource.loop = false;
             microphoneSource.bypassEffects = false;
             microphoneSource.bypassListenerEffects = false;
         }
 
         private IEnumerator Start()
         {
-            // Start record microphone in a loop
+            // Start microphone to avoid freeze
             microphoneSource.clip = Microphone.Start(null, true, 10, AudioSettings.outputSampleRate);
             yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
-            microphoneSource.Play();
-            
+            Microphone.End(null);
+
             // Activate button
             button.SetActive(true);
             
@@ -74,6 +75,16 @@ namespace Record
             Microphone.End(null);
         }
 
+        private void Update()
+        {
+            if (Microphone.IsRecording(null) && Microphone.GetPosition(null) > 0 && !microphoneSource.isPlaying)
+            {
+                AudioClock = new RealtimeClock();
+                microphoneSource.Play();
+                recording = true;
+            }
+        }
+
         private void OnAudioFilterRead (float[] data, int channels)
         {
             if (recording)
@@ -83,18 +94,18 @@ namespace Record
                 {
                     foreach (var mp4Recorder in recorders)
                     {
-                        mp4Recorder.CommitSamples(data, clock.timestamp);
+                        mp4Recorder.CommitSamples(data, AudioClock.timestamp);
                     }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }
-            }
             
-            // Mute sound to avoid voice return
-            // TODO : on play video, don't mute
-            Array.Clear(data, 0, data.Length);
+                // Mute sound to avoid voice return
+                // TODO : on play video, don't mute
+                Array.Clear(data, 0, data.Length);
+            }
         }
 
         public void StartRecording()
@@ -103,7 +114,7 @@ namespace Record
             ready = false;
             
             // Start microphone
-            microphoneSource.mute = false;
+            microphoneSource.clip = Microphone.Start(null, true, 60, AudioSettings.outputSampleRate);
             
             // Create the MP4 recorder
             CreateRecorder();
@@ -117,9 +128,6 @@ namespace Record
             {
                 cameraInputs.Add(new CameraInput(mp4Recorder, clock, renderCamera));
             }
-            
-            // Start recording
-            recording = true;
         }
 
         public async void StopRecording()
@@ -129,7 +137,7 @@ namespace Record
             var duration = (Time.time - timeStart) * 1000;
             
             // Stop Microphone
-            microphoneSource.mute = true;
+            Microphone.End(null);
             
             // Wait finish rendering scene
             await Task.Run(() => new WaitForEndOfFrame());
