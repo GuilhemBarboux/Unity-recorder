@@ -29,6 +29,7 @@ namespace Controls
         // Movement coefficients
         [SerializeField] public float eyeRotationCoefficient = 20;
         [SerializeField] public float mouthRotationCoefficient = 32;
+        [SerializeField] public float bodyRotationCoefficient = 20;
         [SerializeField] [Range(0, 10)] 
         public float intensityCoefficient = 1f;
         [SerializeField] [Range(0, 10)] 
@@ -141,6 +142,13 @@ namespace Controls
             neck.localRotation = neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f);
             body.localRotation = bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.9f);
         }
+        
+        public void SetBodyRotation(Quaternion rotation)
+        {
+            var xRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.x);
+            var yRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.y);
+            // body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
+        }
 
         private void Update()
         {
@@ -155,12 +163,9 @@ namespace Controls
             var rightEyeX = shapeWeights[ARKitBlendShapeLocation.EyeLookDownRight] -
                            shapeWeights[ARKitBlendShapeLocation.EyeLookUpRight];
             
-            eyeLeft.localRotation = eyeLeftRotation; // z because eyes rig is rotate
-            eyeLeft.Rotate(360 + leftEyeX * eyeRotationCoefficient, 0, 360 + leftEyeZ * eyeRotationCoefficient);
+            eyeLeft.localRotation = eyeLeftRotation * Quaternion.Euler(leftEyeX * eyeRotationCoefficient, 0, leftEyeZ * eyeRotationCoefficient); // z because eyes rig is rotate
+            eyeRight.localRotation = eyeRightRotation * Quaternion.Euler(rightEyeX * eyeRotationCoefficient, 0, rightEyeZ * eyeRotationCoefficient); // z because eyes rig is rotate
             
-            eyeRight.localRotation = eyeRightRotation; // z because eyes rig is rotate
-            eyeRight.Rotate(360 + rightEyeX * eyeRotationCoefficient, 0, 360 + rightEyeZ * eyeRotationCoefficient);
-
             // Eyes colors
             var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
             var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;

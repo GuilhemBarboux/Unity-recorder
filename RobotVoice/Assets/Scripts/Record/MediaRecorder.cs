@@ -18,13 +18,6 @@ using UnityEngine.XR.ARSubsystems;
 
 namespace Record
 {
-    [Serializable]
-    public class MediaExport
-    {
-        [SerializeField] public bool active = true;
-        [SerializeField] public Vector2Int dimension;
-    }
-
     [RequireComponent(typeof(AudioListener))]
     public class MediaRecorder : MonoBehaviour
     {
@@ -101,11 +94,11 @@ namespace Record
                 {
                     Console.WriteLine(e);
                 }
-            
-                // Mute sound to avoid voice return
-                // TODO : on play video, don't mute
-                Array.Clear(data, 0, data.Length);
             }
+            
+            // Mute sound to avoid voice return
+            // TODO : on play video, don't mute
+            Array.Clear(data, 0, data.Length);
         }
 
         public void StartRecording()
@@ -159,10 +152,12 @@ namespace Record
             // Clear List
             recorders.Clear();
             cameraInputs.Clear();
-
+            
+            await Task.Run(() => new WaitForSeconds(1f));
             // Share medias
             if (paths.Length > 0)
             {
+                await Task.Run(() => new WaitForEndOfFrame());
 #if UNITY_IPHONE && !UNITY_EDITOR
                 Handheld.PlayFullScreenMovie($"file://{paths[0]}");
                 var sp = new SharePayload();
@@ -180,6 +175,8 @@ namespace Record
             }
             
             // Reset recorders
+            microphoneSource.clip = null;
+            await Task.Run(() => new WaitForSeconds(1f));
             ready = true;
         }
 
@@ -187,9 +184,13 @@ namespace Record
         {
             foreach (var export in exports)
             {
-                if (!export.active) continue;
                 recorders.Add(new MP4Recorder(export.dimension.x, export.dimension.y, 30, AudioSettings.outputSampleRate, (int)AudioSettings.speakerMode));
             }
+        }
+
+        public void SetDimensions(MediaExport[] mediaExports)
+        {
+            exports = mediaExports;
         }
     }
 }

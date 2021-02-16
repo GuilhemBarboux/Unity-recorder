@@ -23,6 +23,7 @@ public class Configurator : MonoBehaviour
     [SerializeField] private Transform headRotation;
     [SerializeField] private Transform intialHeadRotation;
     [SerializeField] private Vector3 headMove;
+    [SerializeField] private Vector3 bodyMove;
 
     private readonly Dictionary<ARKitBlendShapeLocation, Indicator> indicators =
         new Dictionary<ARKitBlendShapeLocation, Indicator>();
@@ -82,6 +83,7 @@ public class Configurator : MonoBehaviour
         }
 #if UNITY_EDITOR
         robot.SetHeadRotation(Quaternion.Euler(headMove));
+        robot.SetBodyRotation(Quaternion.Euler(bodyMove));
 #endif
         headRotation.rotation = robot.head.localRotation;
     }
