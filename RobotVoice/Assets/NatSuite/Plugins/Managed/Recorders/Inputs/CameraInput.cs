@@ -3,6 +3,8 @@
 *   Copyright (c) 2020 Yusuf Olokoba.
 */
 
+using UnityEngine.Experimental.Rendering;
+
 namespace NatSuite.Recorders.Inputs {
 
     using UnityEngine;
@@ -23,6 +25,8 @@ namespace NatSuite.Recorders.Inputs {
         /// </summary>
         public int frameSkip;
 
+        public RenderTextureDescriptor renderDescriptor;
+        
         /// <summary>
         /// Create a video recording input from a game camera.
         /// </summary>
@@ -37,10 +41,11 @@ namespace NatSuite.Recorders.Inputs {
             this.recorder = recorder;
             this.clock = clock;
             this.cameras = cameras;
-            this.frameDescriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGB32, 24);
+            this.frameDescriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 24);
             this.readbackBuffer = SystemInfo.supportsAsyncGPUReadback ? null : new Texture2D(width, height, TextureFormat.RGBA32, false, false);
             this.attachment = cameras[0].gameObject.AddComponent<CameraInputAttachment>();
             this.pixelBuffer = new byte[width * height * 4];
+            renderDescriptor = new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGB32, 24);
             // Start recording
             frameDescriptor.sRGB = true;
             attachment.StartCoroutine(OnFrame());
@@ -77,16 +82,18 @@ namespace NatSuite.Recorders.Inputs {
                     continue;
                 // Render every camera
                 var frameBuffer = RenderTexture.GetTemporary(frameDescriptor);
+                var renderBuffer = RenderTexture.GetTemporary(renderDescriptor);
                 for (var i = 0; i < cameras.Length; i++) {
                     var prevTarget = cameras[i].targetTexture;
                     cameras[i].targetTexture = frameBuffer;
                     cameras[i].Render();
                     cameras[i].targetTexture = prevTarget;
                 }
+                Graphics.Blit(frameBuffer, renderBuffer);
                 // Readback and commit
                 var timestamp = clock.timestamp;
                 if (SystemInfo.supportsAsyncGPUReadback)
-                    AsyncGPUReadback.Request(frameBuffer, 0, request => {
+                    AsyncGPUReadback.Request(renderBuffer, 0, request => {
                         if (pixelBuffer != null) {
                             request.GetData<byte>().CopyTo(pixelBuffer);
                             recorder.CommitFrame(pixelBuffer, timestamp);
@@ -94,13 +101,14 @@ namespace NatSuite.Recorders.Inputs {
                     });
                 else {
                     var prevActive = RenderTexture.active;
-                    RenderTexture.active = frameBuffer;
-                    readbackBuffer.ReadPixels(new Rect(0, 0, frameBuffer.width, frameBuffer.height), 0, 0, false);
+                    RenderTexture.active = renderBuffer;
+                    readbackBuffer.ReadPixels(new Rect(0, 0, renderDescriptor.width, renderDescriptor.height), 0, 0, false);
                     readbackBuffer.GetRawTextureData<byte>().CopyTo(pixelBuffer);
                     recorder.CommitFrame(pixelBuffer, timestamp);
                     RenderTexture.active = prevActive;
                 }
                 RenderTexture.ReleaseTemporary(frameBuffer);
+                RenderTexture.ReleaseTemporary(renderBuffer);
             }
         }
 
