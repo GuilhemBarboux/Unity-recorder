@@ -6,6 +6,7 @@ using Controls;
 using UI;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARKit;
 
 public class Configurator : MonoBehaviour
@@ -27,6 +28,8 @@ public class Configurator : MonoBehaviour
     [SerializeField] private Camera renderCamera;
     [SerializeField] private RawImage display;
     [SerializeField] private RenderTexture renderTexture;
+    [SerializeField] private ARFace face;
+    [SerializeField] private ARSessionOrigin origin;
 
     private readonly Dictionary<ARKitBlendShapeLocation, Indicator> indicators =
         new Dictionary<ARKitBlendShapeLocation, Indicator>();
@@ -84,20 +87,19 @@ public class Configurator : MonoBehaviour
         {
             indicators[robotShapeWeight.Key].value.text = robotShapeWeight.Value.ToString(CultureInfo.InvariantCulture);
         }
-#if UNITY_EDITOR
-        robot.SetHeadRotation(Quaternion.Euler(headMove));
-        robot.SetBodyRotation(Quaternion.Euler(bodyMove));
-#endif
-        headRotation.rotation = robot.head.localRotation;
-
         
-        var frameBuffer = RenderTexture.GetTemporary(new RenderTextureDescriptor(711, 400, RenderTextureFormat.ARGBFloat, 24));
+        var rotationCamera = origin.camera.transform.rotation;
+        var rotationRelativeToFace = rotationCamera * Quaternion.Inverse(face.transform.rotation);
+        robot.SetHeadRotation(rotationRelativeToFace);
+        
+        
+        /* var frameBuffer = RenderTexture.GetTemporary(new RenderTextureDescriptor(711, 400, RenderTextureFormat.ARGBFloat, 24));
         var prevTarget = renderCamera.targetTexture;
         renderCamera.targetTexture = frameBuffer;
         renderCamera.Render();
         renderCamera.targetTexture = prevTarget;
         Graphics.Blit(frameBuffer, renderTexture);
-        RenderTexture.ReleaseTemporary(frameBuffer);
+        RenderTexture.ReleaseTemporary(frameBuffer); */
 
         /* var prevActive = RenderTexture.active;
         var activeTexture = renderCamera.targetTexture;

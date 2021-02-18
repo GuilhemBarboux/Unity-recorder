@@ -1,5 +1,6 @@
 using System;
 using Record;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +15,7 @@ namespace UI
         public Sprite enableMaterial;
         public Sprite disabledMaterial;
         public Image check;
-        public Text title;
+        public TextMeshProUGUI title;
         public Image preview;
         private Image i;
 

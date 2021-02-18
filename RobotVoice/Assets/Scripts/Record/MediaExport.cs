@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Record
 {
-    [CreateAssetMenu(fileName = "ExportMediaDimension", menuName = "Export Media Dimension", order = 0)]
+    [CreateAssetMenu(fileName = "ExportMedia", menuName = "Record/Media dimension", order = 0)]
     public class MediaExport : ScriptableObject
     {
         [SerializeField] public string description;

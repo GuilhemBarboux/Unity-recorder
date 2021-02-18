@@ -137,17 +137,17 @@ namespace Controls
 
         public void SetHeadRotation(Quaternion rotation)
         {
-            var inverse = rotation; // Quaternion.Inverse(rotation);
-            head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * inverse, 0.33f);
-            neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f), 0.33f);
-            body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f), 0.33f);
+            // var inverse = rotation; // Quaternion.Inverse(rotation);
+            head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * rotation, 0.4f);
+            neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(rotation, Quaternion.identity, 0.7f), 0.4f);
+            body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(rotation, Quaternion.identity, 0.9f), 0.4f);
         }
         
         public void SetBodyRotation(Quaternion rotation)
         {
-            var xRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.x);
-            var yRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.y);
-            body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
+            // var xRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.x);
+            // var yRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.y);
+            // body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
         }
 
         private void Update()

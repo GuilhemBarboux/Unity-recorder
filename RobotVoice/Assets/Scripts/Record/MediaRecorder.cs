@@ -26,6 +26,7 @@ namespace Record
         [SerializeField] private Camera renderCamera;
         [SerializeField] private GameObject button;
         [SerializeField] private AudioSource microphoneSource;
+        [SerializeField] private Image background;
         private MediaExport[] exports;
         private List<CameraInput> cameraInputs; // Camera input for recording video
         private List<MP4Recorder> recorders; // Recorder that will record an MP4
@@ -232,6 +233,14 @@ namespace Record
         {
             exports = mediaExports;
         }
+
+        public void SetBackground(Material mediaBackground)
+        {
+            if (mediaBackground)
+            {
+                background.material = mediaBackground;
+            }
+        } 
 
 #if UNITY_IPHONE && !UNITY_EDITOR
         
