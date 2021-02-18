@@ -137,17 +137,17 @@ namespace Controls
 
         public void SetHeadRotation(Quaternion rotation)
         {
-            var inverse = Quaternion.Inverse(rotation);
-            head.localRotation = headRotation * inverse;
-            neck.localRotation = neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f);
-            body.localRotation = bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.9f);
+            var inverse = rotation; // Quaternion.Inverse(rotation);
+            head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * inverse, 0.33f);
+            neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f), 0.33f);
+            body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.65f), 0.33f);
         }
         
         public void SetBodyRotation(Quaternion rotation)
         {
             var xRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.x);
             var yRotation = Mathf.Lerp(-bodyRotationCoefficient, bodyRotationCoefficient, 0.5f + rotation.y);
-            // body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
+            body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
         }
 
         private void Update()
@@ -167,10 +167,10 @@ namespace Controls
             eyeRight.localRotation = eyeRightRotation * Quaternion.Euler(rightEyeX * eyeRotationCoefficient, 0, rightEyeZ * eyeRotationCoefficient); // z because eyes rig is rotate
             
             // Eyes colors
-            var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
+            /* var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
             var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
             eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * (eyeIntensityMin + leftIntensity));
-            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + rightIntensity));
+            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + rightIntensity)); */
             
             // Mouth
             var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -

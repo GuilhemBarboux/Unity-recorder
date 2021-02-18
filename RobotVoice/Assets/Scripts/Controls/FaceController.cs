@@ -44,14 +44,14 @@ namespace Controls
 #if UNITY_IPHONE
             using var blendShapes = arKitFaceSubsystem.GetBlendShapeCoefficients(face.trackableId, Allocator.Temp);
             var rotationCamera = origin.camera.transform.rotation;
-            var rotationRelativeToFace = Quaternion.Inverse(rotationCamera) * face.transform.rotation; // this quaternion represents a face rotation relative to camera
-            var rotationRelativeToOrigin = Quaternion.Inverse(rotationCamera) * origin.transform.rotation;
+            var rotationRelativeToFace = rotationCamera * Quaternion.Euler(Vector3.up * 180) * face.transform.rotation; // this quaternion represents a face rotation relative to camera
+            // var rotationRelativeToOrigin = Quaternion.Inverse(rotationCamera) * origin.transform.rotation;
             
             foreach (var robotController in robots)
             {
                 robotController.SetBlendShapes(blendShapes);
                 robotController.SetHeadRotation(rotationRelativeToFace);
-                robotController.SetBodyRotation(rotationRelativeToOrigin);
+                // robotController.SetBodyRotation(rotationRelativeToOrigin);
             }
 #endif
         }

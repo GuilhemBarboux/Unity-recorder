@@ -24,6 +24,9 @@ public class Configurator : MonoBehaviour
     [SerializeField] private Transform intialHeadRotation;
     [SerializeField] private Vector3 headMove;
     [SerializeField] private Vector3 bodyMove;
+    [SerializeField] private Camera renderCamera;
+    [SerializeField] private RawImage display;
+    [SerializeField] private RenderTexture renderTexture;
 
     private readonly Dictionary<ARKitBlendShapeLocation, Indicator> indicators =
         new Dictionary<ARKitBlendShapeLocation, Indicator>();
@@ -86,6 +89,21 @@ public class Configurator : MonoBehaviour
         robot.SetBodyRotation(Quaternion.Euler(bodyMove));
 #endif
         headRotation.rotation = robot.head.localRotation;
+
+        
+        var frameBuffer = RenderTexture.GetTemporary(new RenderTextureDescriptor(711, 400, RenderTextureFormat.ARGBFloat, 24));
+        var prevTarget = renderCamera.targetTexture;
+        renderCamera.targetTexture = frameBuffer;
+        renderCamera.Render();
+        renderCamera.targetTexture = prevTarget;
+        Graphics.Blit(frameBuffer, renderTexture);
+        RenderTexture.ReleaseTemporary(frameBuffer);
+
+        /* var prevActive = RenderTexture.active;
+        var activeTexture = renderCamera.targetTexture;
+        RenderTexture.active = activeTexture;
+        renderTexture.ReadPixels(new Rect(0, 0, activeTexture.width, activeTexture.height), 0, 0, false);
+        RenderTexture.active = prevActive; */
     }
 
     public void Toggle()
