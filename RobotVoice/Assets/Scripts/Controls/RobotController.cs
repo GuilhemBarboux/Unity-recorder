@@ -137,10 +137,10 @@ namespace Controls
 
         public void SetHeadRotation(Quaternion rotation)
         {
-            // var inverse = rotation; // Quaternion.Inverse(rotation);
-            head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * rotation, 0.4f);
-            neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(rotation, Quaternion.identity, 0.7f), 0.4f);
-            body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(rotation, Quaternion.identity, 0.9f), 0.4f);
+            var inverse = Quaternion.Inverse(rotation);
+            head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * inverse, 0.4f);
+            neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.7f), 0.4f);
+            body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.9f), 0.4f);
         }
         
         public void SetBodyRotation(Quaternion rotation)

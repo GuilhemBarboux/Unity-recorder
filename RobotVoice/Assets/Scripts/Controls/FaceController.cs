@@ -28,10 +28,10 @@ namespace Controls
         }
 
         private void OnEnable()
-        {
+        { 
             var faceManager = FindObjectOfType<ARFaceManager>();
             if (faceManager == null) return;
-
+            Debug.Log("A face was found !");
 #if UNITY_IPHONE
             arKitFaceSubsystem = (ARKitFaceSubsystem) faceManager.subsystem;
 #endif
@@ -58,6 +58,7 @@ namespace Controls
 
         private void OnSessionStateChanged(ARSessionStateChangedEventArgs arSessionStateChangedEventArgs)
         {
+            
         }
 
         private void OnDisable()

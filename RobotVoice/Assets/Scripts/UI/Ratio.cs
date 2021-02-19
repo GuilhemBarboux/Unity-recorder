@@ -31,6 +31,7 @@ namespace UI
 
         public void OnValueChanged(bool value)
         {
+            if (i == null) return;
             i.color = value ? enabledColor : disabledColor;
             check.color = i.color;
             check.sprite = value ? enableMaterial : disabledMaterial;

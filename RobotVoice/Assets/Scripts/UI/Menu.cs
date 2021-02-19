@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using NatSuite.Sharing;
+using TMPro;
 
 namespace UI
 {
@@ -20,7 +21,10 @@ namespace UI
         [SerializeField] private GameObject[] menuActions;
         [SerializeField] private GameObject[] recordActions;
         [SerializeField] private GameObject[] replayActions;
-        
+        [SerializeField] private GameObject recordButton;
+        [SerializeField] private TextMeshProUGUI RecordDuration;
+        [SerializeField] private TextMeshProUGUI RestRecordDuration;
+
         public UnityEvent<MediaExport[]> onRatiosChanged;
         public UnityEvent<Material> onBackgroundChanged;
 
@@ -76,11 +80,9 @@ namespace UI
 
         private void FixedUpdate()
         {
-            if (recordStartTime > 0)
-            {
-                Debug.Log(Duration);
-                Debug.Log(ReverseDuration);
-            }
+            if (!(recordStartTime > 0)) return;
+            RecordDuration.text = Duration;
+            RestRecordDuration.text = ReverseDuration;
         }
 
         private async Task CloseAll()
@@ -186,11 +188,6 @@ namespace UI
         {
             recordDuration = (Time.time - recordStartTime) * 1000;
             recordStartTime = 0f;
-            HideAllMenu();
-            foreach (var action in replayActions)
-            {
-                action.SetActive(true);
-            }
         }
 
         public void Restart()
@@ -200,24 +197,39 @@ namespace UI
             {
                 action.SetActive(true);
             }
+            recordButton.SetActive(true);
         }
 
         public void Replay()
         {
+            Debug.Log(paths.Length);
             if (paths.Length > 0) Handheld.PlayFullScreenMovie($"file://{paths[0]}");
         }
         
         public async void Share()
         {
+#if UNITY_IPHONE && !UNITY_EDITOR
             if (paths.Length <= 0) return;
             var sp = new SharePayload();
             foreach (var path in paths) sp.AddMedia(path);
             await sp.Commit();
+#endif
         }
 
         public void OnFinishRecord(string[] mediaPaths)
         {
             paths = mediaPaths;
+#if  UNITY_EDITOR
+            foreach (var path in paths) Debug.Log(path);
+#endif
+            HideAllMenu();
+            recordButton.SetActive(false);
+            foreach (var action in replayActions)
+            {
+                action.SetActive(true);
+            }
+
+            Replay();
         }
 
         private void SendRatios()

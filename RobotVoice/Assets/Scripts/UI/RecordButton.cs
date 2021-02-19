@@ -10,7 +10,7 @@ namespace UI {
 	[RequireComponent(typeof(EventTrigger))]
 	public class RecordButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
-		public Image button, countdown;
+		public Image button, countdown, circle, square;
 		public UnityEvent onTouchDown, onTouchUp;
 		private bool pressed;
 		private const float MaxRecordingTime = MediaRecorder.MAXDurationS; // seconds
@@ -46,6 +46,8 @@ namespace UI {
 			// Start recording
 			onTouchDown?.Invoke();
 			// Animate the countdown
+			circle.gameObject.SetActive(false);
+			square.gameObject.SetActive(true);
 			float startTime = Time.time, ratio = 0f;
 			while (pressed && (ratio = (Time.time - startTime) / MaxRecordingTime) < 1.0f) {
 				countdown.fillAmount = ratio;
@@ -56,6 +58,8 @@ namespace UI {
 			Reset();
 			// Stop recording
 			onTouchUp?.Invoke();
+			circle.gameObject.SetActive(true);
+			square.gameObject.SetActive(false);
 		}
 	}
 }

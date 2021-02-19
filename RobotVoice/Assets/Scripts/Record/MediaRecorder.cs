@@ -204,11 +204,10 @@ namespace Record
             if (paths.Length > 0)
             {
                 await Task.Run(() => new WaitForEndOfFrame());
-                OnFinishRecord.Invoke(paths);
 #if  UNITY_EDITOR
-                Debug.Log("Duration " + duration);
-                foreach (var path in paths) Debug.Log(path);
+                Debug.Log("Record video of duration " + duration + "ms");
 #endif
+                OnFinishRecord.Invoke(paths);
             }
             
             // Reset recorders
