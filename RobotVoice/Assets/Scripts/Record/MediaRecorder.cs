@@ -2,34 +2,30 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using NatSuite.Devices;
 using NatSuite.Recorders;
 using NatSuite.Recorders.Clocks;
 using NatSuite.Recorders.Inputs;
-using NatSuite.Sharing;
-using Unity.Collections;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Audio;
-using UnityEngine.Rendering;
+using UnityEngine.Events;
 using UnityEngine.UI;
-using UnityEngine.XR.ARSubsystems;
 
 namespace Record
 {
     [RequireComponent(typeof(AudioListener))]
     public class MediaRecorder : MonoBehaviour
     {
+        public const int MAXDurationS = 60;
+        
         [SerializeField] private Camera renderCamera;
         [SerializeField] private GameObject button;
         [SerializeField] private AudioSource microphoneSource;
         [SerializeField] private Image background;
-        private MediaExport[] exports;
+        private MediaExport[] exports = new MediaExport[0];
         private List<CameraInput> cameraInputs; // Camera input for recording video
         private List<MP4Recorder> recorders; // Recorder that will record an MP4
+        public UnityEvent<string[]> OnFinishRecord;
         
         private bool recording; // Recording video
         private bool ready; // Ready to new record
@@ -40,6 +36,17 @@ namespace Record
         private Texture2D readbackBuffer;
         private byte[] pixelBuffer;
         private RenderTextureDescriptor frameDescriptor;
+        
+        // Hack to set sample rate on each microphone record (IOS) 
+#if UNITY_IPHONE && !UNITY_EDITOR
+        [DllImport ("__Internal")]
+        private static extern void SetPreferredSampleRate(int sampleRate);
+#endif
+        private static void EnableRecording() {
+#if UNITY_IPHONE && !UNITY_EDITOR
+        SetPreferredSampleRate(AudioSettings.outputSampleRate);
+#endif
+        }
 
         private void Awake()
         {
@@ -197,26 +204,15 @@ namespace Record
             if (paths.Length > 0)
             {
                 await Task.Run(() => new WaitForEndOfFrame());
-#if UNITY_IPHONE && !UNITY_EDITOR
-                // Handheld.PlayFullScreenMovie($"file://{paths[0]}");
-                microphoneSource.Play();
-                var sp = new SharePayload();
-                foreach (var path in paths) sp.AddMedia(path);
-                await Task.Delay((int)duration);
-                await sp.Commit();
-#else
+                OnFinishRecord.Invoke(paths);
+#if  UNITY_EDITOR
                 Debug.Log("Duration " + duration);
                 foreach (var path in paths) Debug.Log(path);
 #endif
             }
-            else
-            {
-                // TODO : display Error
-            }
             
             // Reset recorders
             microphoneSource.clip = null;
-            await Task.Run(() => new WaitForSeconds(1f));
             ready = true;
         }
 
@@ -224,7 +220,6 @@ namespace Record
         {
             foreach (var export in exports)
             {
-                Debug.Log("Create recorder " + export.dimension.x + "x" + export.dimension.y);
                 recorders.Add(new MP4Recorder(export.dimension.x, export.dimension.y, 30, AudioSettings.outputSampleRate, (int)AudioSettings.speakerMode));
             }
         }
@@ -240,17 +235,6 @@ namespace Record
             {
                 background.material = mediaBackground;
             }
-        } 
-
-#if UNITY_IPHONE && !UNITY_EDITOR
-        
-        [DllImport ("__Internal")]
-        private static extern void SetPreferredSampleRate(int sampleRate);
-#endif
-        private static void EnableRecording() {
-#if UNITY_IPHONE && !UNITY_EDITOR
-        SetPreferredSampleRate(AudioSettings.outputSampleRate);
-#endif
         }
     }
 }
