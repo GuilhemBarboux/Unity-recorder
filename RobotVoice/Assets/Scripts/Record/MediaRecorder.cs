@@ -56,7 +56,7 @@ namespace Record
             microphoneSource.bypassListenerEffects = false;
         }
 
-        private void Start()
+        private IEnumerator Start()
         {
             // Start microphone to avoid freeze
             microphoneSource.clip = Microphone.Start(null, true, 10, AudioSettings.outputSampleRate);
@@ -77,16 +77,6 @@ namespace Record
             Microphone.End(null);
         }
 
-        private void Update()
-        {
-            if (Microphone.IsRecording(null) && Microphone.GetPosition(null) > 0 && !microphoneSource.isPlaying)
-            {
-                AudioClock = new RealtimeClock();
-                microphoneSource.Play();
-                recording = true;
-            }
-        }
-
         private void OnAudioFilterRead(float[] data, int channels)
         {
             if (recording)
@@ -105,6 +95,15 @@ namespace Record
             Array.Clear(data, 0, data.Length);
         }
 
+        private IEnumerator StartMicrophone()
+        {
+            microphoneSource.clip = Microphone.Start(null, true, 60, AudioSettings.outputSampleRate);
+            yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
+            AudioClock = new RealtimeClock();
+            microphoneSource.Play();
+            recording = true;
+        }
+
         public void StartRecording()
         {
             if (!ready) return;
@@ -114,8 +113,7 @@ namespace Record
             CreateRecorder();
 
             // Start microphone
-            EnableRecording();
-            microphoneSource.clip = Microphone.Start(null, true, 60, AudioSettings.outputSampleRate);
+            StartCoroutine(StartMicrophone());
             
             // Save timestart to replay video time
             timeStart = Time.time;
@@ -131,16 +129,15 @@ namespace Record
             recording = false;
             var duration = (Time.time - timeStart) * 1000;
 
-            // Stop Microphone
-            Microphone.End(null);
-
-            // Wait finish rendering scene
-            await Task.Run(() => new WaitForEndOfFrame());
-
             // Stop streaming media to the recorder
             cameraInputs.ForEach(ci => ci.Dispose());
-            clock = null;
             AudioClock = null;
+
+            // Stop Microphone
+            await Task.Run(() => new WaitUntil(() => AudioClock.timestamp >= clock.timestamp));
+            Microphone.End(null);
+            microphoneSource.clip = null;
+            clock = null;
 
             // Finish writing video
             var paths = new string[0];
@@ -169,7 +166,6 @@ namespace Record
             }
 
             // Reset recorders
-            microphoneSource.clip = null;
             ready = true;
         }
 

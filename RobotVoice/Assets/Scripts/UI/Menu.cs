@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using NatSuite.Sharing;
 using TMPro;
+using UnityEngine.Video;
 
 namespace UI
 {
@@ -23,9 +25,11 @@ namespace UI
         [SerializeField] private GameObject[] recordActions;
         [SerializeField] private GameObject[] replayActions;
         [SerializeField] private GameObject recordButton;
+        [SerializeField] private Animator replayAnimator;
         [SerializeField] private TextMeshProUGUI recordTimer;
         [SerializeField] private TextMeshProUGUI restRecordTimer;
-
+        [SerializeField] private VideoPlayer videoPlayer;
+        
         public UnityEvent<MediaExport[]> onRatiosChanged;
         public UnityEvent<Material> onBackgroundChanged;
 
@@ -36,6 +40,7 @@ namespace UI
         private float recordDuration;
         private BackgroundButton[] backgroundButtons;
         private string[] paths = new string[0];
+        private static readonly int Replay = Animator.StringToHash("replay");
 
         private static string GetTimer(long time)
         {
@@ -72,9 +77,13 @@ namespace UI
             {
                 backgroundButtons[0].GetComponent<Toggle>().isOn = true;
             }
+
+            videoPlayer.enabled = false;
+            videoPlayer.started += OnVideoReplayLoop;
+            videoPlayer.loopPointReached += OnVideoReplayLoop;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (!recording) return;
             recordTimer.text = duration;
@@ -195,15 +204,12 @@ namespace UI
             {
                 action.SetActive(true);
             }
+            videoPlayer.Pause();
+            videoPlayer.enabled = false;
             recordButton.SetActive(true);
+            replayAnimator.gameObject.SetActive(false);
         }
 
-        public void Replay()
-        {
-            Debug.Log(paths.Length);
-            if (paths.Length > 0) Handheld.PlayFullScreenMovie($"file://{paths[0]}");
-        }
-        
         public async void Share()
         {
             if (paths.Length <= 0) return;
@@ -220,12 +226,17 @@ namespace UI
 #endif
             HideAllMenu();
             recordButton.SetActive(false);
+            replayAnimator.gameObject.SetActive(true);
             foreach (var action in replayActions)
             {
                 action.SetActive(true);
             }
 
-            Replay();
+            if (paths.Length <= 0) return;
+            videoPlayer.enabled = true;
+            videoPlayer.url = paths[0];
+            videoPlayer.Prepare();
+            videoPlayer.Play();
         }
 
         private void SendRatios()
@@ -236,6 +247,12 @@ namespace UI
         private void SendBackground(Material background)
         {
             onBackgroundChanged.Invoke(background);
+        }
+
+        private void OnVideoReplayLoop(VideoPlayer source)
+        {
+            replayAnimator.speed = 1f / (float) source.length;
+            replayAnimator.SetTrigger(Replay);
         }
     }
 }
