@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace UI
 {
     [RequireComponent(typeof(Animator))]
-    public class ButtonBackground : MonoBehaviour
+    public class BackgroundButton : MonoBehaviour
     {
         [SerializeField] private Material background;
         public UnityEvent<Material> onValueChanged;

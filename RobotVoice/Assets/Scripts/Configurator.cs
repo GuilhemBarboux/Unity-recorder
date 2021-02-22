@@ -83,15 +83,13 @@ public class Configurator : MonoBehaviour
 
     private void Update()
     {
+        
+#if UNITY_EDITOR
         foreach (var robotShapeWeight in robot.shapeWeights)
         {
             indicators[robotShapeWeight.Key].value.text = robotShapeWeight.Value.ToString(CultureInfo.InvariantCulture);
         }
-        
-        var rotationCamera = origin.camera.transform.rotation;
-        var rotationRelativeToFace = rotationCamera * Quaternion.Inverse(face.transform.rotation);
-        robot.SetHeadRotation(rotationRelativeToFace);
-        
+#endif
         
         /* var frameBuffer = RenderTexture.GetTemporary(new RenderTextureDescriptor(711, 400, RenderTextureFormat.ARGBFloat, 24));
         var prevTarget = renderCamera.targetTexture;

@@ -1244,7 +1244,7 @@ GameObject:
   - component: {fileID: 4303694271130369761}
   - component: {fileID: 6237265888355633389}
   m_Layer: 5
-  m_Name: Max Duration Time
+  m_Name: Rest record timer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1474,7 +1474,7 @@ GameObject:
   - component: {fileID: 6237770338401160971}
   - component: {fileID: 1998203985464412007}
   m_Layer: 5
-  m_Name: Duration Time
+  m_Name: Record timer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4656,8 +4656,8 @@ MonoBehaviour:
   - {fileID: 7273672991617613949}
   - {fileID: 1682626534142073120}
   recordButton: {fileID: 8312226846567723118}
-  RecordDuration: {fileID: 6237770338401160971}
-  RestRecordDuration: {fileID: 4303694271130369761}
+  recordTimer: {fileID: 6237770338401160971}
+  restRecordTimer: {fileID: 4303694271130369761}
   onRatiosChanged:
     m_PersistentCalls:
       m_Calls:

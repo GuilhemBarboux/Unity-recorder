@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NatSuite.Recorders.Clocks;
 using Record;
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,7 +14,7 @@ namespace UI
 {
     public class Menu : MonoBehaviour
     {
-        [SerializeField] private Ratio[] ratios;
+        [SerializeField] private RatioButton[] ratios;
         [SerializeField] private Animator[] panels;
         [SerializeField] private Animator[] buttons;
         [SerializeField] private string triggerPanelName;
@@ -22,40 +23,35 @@ namespace UI
         [SerializeField] private GameObject[] recordActions;
         [SerializeField] private GameObject[] replayActions;
         [SerializeField] private GameObject recordButton;
-        [SerializeField] private TextMeshProUGUI RecordDuration;
-        [SerializeField] private TextMeshProUGUI RestRecordDuration;
+        [SerializeField] private TextMeshProUGUI recordTimer;
+        [SerializeField] private TextMeshProUGUI restRecordTimer;
 
         public UnityEvent<MediaExport[]> onRatiosChanged;
         public UnityEvent<Material> onBackgroundChanged;
 
         private bool isTransition;
         private int transitionDuration = 800;
-        private float recordStartTime;
+        private IClock clock;
+        private bool recording;
         private float recordDuration;
-        private ButtonBackground[] backgroundButtons;
+        private BackgroundButton[] backgroundButtons;
         private string[] paths = new string[0];
 
-        public string GetTimer(float time)
+        private static string GetTimer(long time)
         {
             var stamp = Mathf.Round(time);
             var seconds = stamp % 60;
             var minutes = Mathf.Floor(stamp / 60);
             return $"{minutes:00}:{seconds:00}";
         }
-        
-        public string Duration
-        {
-            get => GetTimer(Time.time - recordStartTime);
-        }
-        
-        public string ReverseDuration
-        {
-            get => GetTimer(MediaRecorder.MAXDurationS - (Time.time - recordStartTime));
-        }
-        
+
+        private string duration => GetTimer(recording ? clock.timestamp / 1000000000 : 0);
+
+        private string reverseDuration => GetTimer(recording ? MediaRecorder.MAXDurationS - clock.timestamp / 1000000000 : 0);
+
         private void Awake()
         {
-            backgroundButtons = GetComponentsInChildren<ButtonBackground>();
+            backgroundButtons = GetComponentsInChildren<BackgroundButton>();
 
             foreach (var backgroundButton in backgroundButtons)
             {
@@ -80,9 +76,9 @@ namespace UI
 
         private void FixedUpdate()
         {
-            if (!(recordStartTime > 0)) return;
-            RecordDuration.text = Duration;
-            RestRecordDuration.text = ReverseDuration;
+            if (!recording) return;
+            recordTimer.text = duration;
+            restRecordTimer.text = reverseDuration;
         }
 
         private async Task CloseAll()
@@ -109,7 +105,7 @@ namespace UI
             isTransition = false;
         }
 
-        public async void Open(Animator panel)
+        private async void Open(Animator panel)
         {
             if (isTransition) return;
             isTransition = true;
@@ -134,8 +130,8 @@ namespace UI
                 Open(panel);
             }
         }
-        
-        public void OnValueChanged(bool value)
+
+        private void OnValueChanged(bool value)
         {
             var toggles = ratios.Select(item => item.GetComponent<Toggle>()).ToList();
             var wasOnCount = toggles.Count(toggle => toggle.isOn);
@@ -176,7 +172,8 @@ namespace UI
 
         public void OnStartRecord()
         {
-            recordStartTime = Time.time;
+            clock = new RealtimeClock();
+            recording = true;
             HideAllMenu();
             foreach (var action in recordActions)
             {
@@ -186,8 +183,9 @@ namespace UI
 
         public void OnStopRecord()
         {
-            recordDuration = (Time.time - recordStartTime) * 1000;
-            recordStartTime = 0f;
+            recordDuration = clock.timestamp;
+            recording = false;
+            clock = null;
         }
 
         public void Restart()
@@ -208,12 +206,10 @@ namespace UI
         
         public async void Share()
         {
-#if UNITY_IPHONE && !UNITY_EDITOR
             if (paths.Length <= 0) return;
             var sp = new SharePayload();
             foreach (var path in paths) sp.AddMedia(path);
             await sp.Commit();
-#endif
         }
 
         public void OnFinishRecord(string[] mediaPaths)

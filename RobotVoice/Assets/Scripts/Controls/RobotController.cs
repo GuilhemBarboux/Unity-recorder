@@ -137,7 +137,7 @@ namespace Controls
 
         public void SetHeadRotation(Quaternion rotation)
         {
-            var inverse = Quaternion.Inverse(rotation);
+            var inverse = Quaternion.Euler(-rotation.eulerAngles.x, rotation.eulerAngles.y, -rotation.eulerAngles.z);
             head.localRotation = Quaternion.Slerp(head.localRotation, headRotation * inverse, 0.4f);
             neck.localRotation = Quaternion.Slerp(neck.localRotation, neckRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.7f), 0.4f);
             body.localRotation = Quaternion.Slerp(body.localRotation, bodyRotation * Quaternion.Slerp(inverse, Quaternion.identity, 0.9f), 0.4f);
@@ -167,10 +167,10 @@ namespace Controls
             eyeRight.localRotation = eyeRightRotation * Quaternion.Euler(rightEyeX * eyeRotationCoefficient, 0, rightEyeZ * eyeRotationCoefficient); // z because eyes rig is rotate
             
             // Eyes colors
-            /* var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
+            var leftIntensity =  (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkLeft]) * intensityCoefficient;
             var rightIntensity = (1f - shapeWeights[ARKitBlendShapeLocation.EyeBlinkRight]) * intensityCoefficient;
             eyeLeftMaterial.SetColor(EmissionColor, eyeLeftColor * (eyeIntensityMin + leftIntensity));
-            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + rightIntensity)); */
+            eyeRightMaterial.SetColor(EmissionColor, eyeRightColor * (eyeIntensityMin + rightIntensity));
             
             // Mouth
             var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -

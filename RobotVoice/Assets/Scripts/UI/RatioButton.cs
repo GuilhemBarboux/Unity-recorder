@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace UI
 {
     [RequireComponent(typeof(Toggle)), RequireComponent(typeof(Image))]
-    public class Ratio : MonoBehaviour
+    public class RatioButton : MonoBehaviour
     {
         public MediaExport dimension;
         public Color enabledColor;

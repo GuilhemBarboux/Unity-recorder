@@ -17,7 +17,7 @@ namespace Record
     public class MediaRecorder : MonoBehaviour
     {
         public const int MAXDurationS = 60;
-        
+
         [SerializeField] private Camera renderCamera;
         [SerializeField] private GameObject button;
         [SerializeField] private AudioSource microphoneSource;
@@ -25,24 +25,19 @@ namespace Record
         private MediaExport[] exports = new MediaExport[0];
         private List<CameraInput> cameraInputs; // Camera input for recording video
         private List<MP4Recorder> recorders; // Recorder that will record an MP4
-        public UnityEvent<string[]> OnFinishRecord;
-        
+        public UnityEvent<string[]> onFinishRecord;
+
         private bool recording; // Recording video
         private bool ready; // Ready to new record
-
         private IClock clock;
         private IClock AudioClock;
         private float timeStart;
-        private Texture2D readbackBuffer;
-        private byte[] pixelBuffer;
-        private RenderTextureDescriptor frameDescriptor;
-        
+
         // Hack to set sample rate on each microphone record (IOS) 
-#if UNITY_IPHONE && !UNITY_EDITOR
         [DllImport ("__Internal")]
         private static extern void SetPreferredSampleRate(int sampleRate);
-#endif
-        private static void EnableRecording() {
+        private static void EnableRecording()
+        {
 #if UNITY_IPHONE && !UNITY_EDITOR
         SetPreferredSampleRate(AudioSettings.outputSampleRate);
 #endif
@@ -54,18 +49,14 @@ namespace Record
             cameraInputs = new List<CameraInput>();
 
             if (microphoneSource == null) microphoneSource = new AudioSource();
-            
+
             microphoneSource.mute = false;
             microphoneSource.loop = false;
             microphoneSource.bypassEffects = false;
             microphoneSource.bypassListenerEffects = false;
-            
-            readbackBuffer = new Texture2D(1920, 1080, TextureFormat.RGBA32, false, false);
-            pixelBuffer = new byte[1920 * 1080 * 4];
-            frameDescriptor = new RenderTextureDescriptor(1920, 1080, RenderTextureFormat.ARGB32, 24);
         }
 
-        private IEnumerator Start()
+        private void Start()
         {
             // Start microphone to avoid freeze
             microphoneSource.clip = Microphone.Start(null, true, 10, AudioSettings.outputSampleRate);
@@ -74,12 +65,13 @@ namespace Record
 
             // Activate button
             button.SetActive(true);
-            
+
             // App ready to start record
             ready = true;
         }
 
-        private void OnDestroy () {
+        private void OnDestroy()
+        {
             // Stop microphone
             if (microphoneSource != null) microphoneSource.Stop();
             Microphone.End(null);
@@ -95,95 +87,61 @@ namespace Record
             }
         }
 
-        private void OnAudioFilterRead (float[] data, int channels)
+        private void OnAudioFilterRead(float[] data, int channels)
         {
             if (recording)
-            {
                 // Save audio sample on all recorders
                 try
                 {
-                    foreach (var mp4Recorder in recorders)
-                    {
-                        mp4Recorder.CommitSamples(data, AudioClock.timestamp);
-                    }
+                    foreach (var mp4Recorder in recorders) mp4Recorder.CommitSamples(data, AudioClock.timestamp);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }
-            }
-            
+
             // Mute sound to avoid voice return
             // TODO : on play video, don't mute
             Array.Clear(data, 0, data.Length);
         }
 
-        /* private void EndFrameRendering(ScriptableRenderContext scriptableRenderContext, Camera[] cameras)
-        {
-            Debug.Log("EndFrameRendering");
-            if (clock == null) return;
-
-            RenderTexture.active = renderCamera.targetTexture;
-            
-            
-            var frameBuffer = RenderTexture.GetTemporary(frameDescriptor);
-            var prevTarget = renderCamera.targetTexture;
-            renderCamera.targetTexture = frameBuffer;
-            renderCamera.Render();
-            renderCamera.targetTexture = prevTarget;
-            var timestamp = clock.timestamp;
-            var prevActive = RenderTexture.active;
-            RenderTexture.active = frameBuffer;
-            readbackBuffer.ReadPixels(new Rect(0, 0, frameBuffer.width, frameBuffer.height), 0, 0, false);
-            readbackBuffer.GetRawTextureData<byte>().CopyTo(pixelBuffer);
-            foreach (var mp4Recorder in recorders)
-            {
-                mp4Recorder.CommitFrame(pixelBuffer, timestamp);
-            }
-            RenderTexture.active = prevActive;
-            RenderTexture.ReleaseTemporary(frameBuffer);
-        } */
-
         public void StartRecording()
         {
             if (!ready) return;
             ready = false;
-            
+
             // Create the MP4 recorder
             CreateRecorder();
-            
+
             // Start microphone
             EnableRecording();
             microphoneSource.clip = Microphone.Start(null, true, 60, AudioSettings.outputSampleRate);
             
             // Save timestart to replay video time
             timeStart = Time.time;
-            
+
             // Create audio and camera input
             clock = new RealtimeClock();
-            foreach (var mp4Recorder in recorders)
-            {
-                cameraInputs.Add(new CameraInput(mp4Recorder, clock, renderCamera));
-            }
+            foreach (var mp4Recorder in recorders) cameraInputs.Add(new CameraInput(mp4Recorder, clock, renderCamera));
         }
 
         public async void StopRecording()
-        {  
+        {
             // Stop recording
             recording = false;
             var duration = (Time.time - timeStart) * 1000;
-            
+
             // Stop Microphone
             Microphone.End(null);
 
             // Wait finish rendering scene
             await Task.Run(() => new WaitForEndOfFrame());
-            
+
             // Stop streaming media to the recorder
             cameraInputs.ForEach(ci => ci.Dispose());
             clock = null;
             AudioClock = null;
-            
+
             // Finish writing video
             var paths = new string[0];
             try
@@ -194,22 +152,22 @@ namespace Record
             {
                 Console.WriteLine(e);
             }
-            
+
             // Clear List
             recorders.Clear();
             cameraInputs.Clear();
-            
+
             await Task.Run(() => new WaitForSeconds(2f));
             // Share medias
             if (paths.Length > 0)
             {
                 await Task.Run(() => new WaitForEndOfFrame());
-#if  UNITY_EDITOR
+#if UNITY_EDITOR
                 Debug.Log("Record video of duration " + duration + "ms");
 #endif
-                OnFinishRecord.Invoke(paths);
+                onFinishRecord.Invoke(paths);
             }
-            
+
             // Reset recorders
             microphoneSource.clip = null;
             ready = true;
@@ -218,9 +176,8 @@ namespace Record
         private void CreateRecorder()
         {
             foreach (var export in exports)
-            {
-                recorders.Add(new MP4Recorder(export.dimension.x, export.dimension.y, 30, AudioSettings.outputSampleRate, (int)AudioSettings.speakerMode));
-            }
+                recorders.Add(new MP4Recorder(export.dimension.x, export.dimension.y, 30,
+                    AudioSettings.outputSampleRate, (int) AudioSettings.speakerMode));
         }
 
         public void SetDimensions(MediaExport[] mediaExports)
@@ -230,10 +187,7 @@ namespace Record
 
         public void SetBackground(Material mediaBackground)
         {
-            if (mediaBackground)
-            {
-                background.material = mediaBackground;
-            }
+            if (mediaBackground) background.material = mediaBackground;
         }
     }
 }
