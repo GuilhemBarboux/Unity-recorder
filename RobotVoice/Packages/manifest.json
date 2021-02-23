@@ -14,6 +14,7 @@
     "com.unity.xr.arkit": "4.0.12",
     "com.unity.xr.arkit-face-tracking": "4.0.12",
     "com.unity.xr.management": "3.2.17",
+    "nrjwolf.games.iosnativealerts": "git+https://github.com/Nrjwolf/unity-ios-easy-native-alert",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",

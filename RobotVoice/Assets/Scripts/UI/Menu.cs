@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using NatSuite.Sharing;
+using Nrjwolf.Tools;
 using TMPro;
 using UnityEngine.Video;
 
@@ -179,7 +180,7 @@ namespace UI
             }
         }
 
-        public void OnStartRecord()
+        public async void OnStartRecord()
         {
             clock = new RealtimeClock();
             recording = true;
@@ -188,6 +189,7 @@ namespace UI
             {
                 action.SetActive(true);
             }
+            await CloseAll();
         }
 
         public void OnStopRecord()
@@ -197,7 +199,7 @@ namespace UI
             clock = null;
         }
 
-        public void Restart()
+        private void OnRestartRecord()
         {
             HideAllMenu();
             foreach (var action in menuActions)
@@ -208,6 +210,20 @@ namespace UI
             videoPlayer.enabled = false;
             recordButton.SetActive(true);
             replayAnimator.gameObject.SetActive(false);
+        }
+
+        public void Restart()
+        {
+#if UNITY_IPHONE
+            IOSNativeAlert.ShowSheetMessage(
+                "Restart",
+                "Are you sure you want to start over ? This video will be deleted.",
+                new IOSNativeAlert.AlertButton("Keep", null, ButtonStyle.Cancel),
+                new IOSNativeAlert.AlertButton("Restart", OnRestartRecord, ButtonStyle.Destructive)
+            );
+#else
+            OnRestartRecord();
+#endif
         }
 
         public async void Share()
