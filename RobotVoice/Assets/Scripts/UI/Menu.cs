@@ -214,7 +214,7 @@ namespace UI
 
         public void Restart()
         {
-#if UNITY_IPHONE
+#if UNITY_IPHONE && !UNITY_EDITOR
             IOSNativeAlert.ShowSheetMessage(
                 "Restart",
                 "Are you sure you want to start over ? This video will be deleted.",

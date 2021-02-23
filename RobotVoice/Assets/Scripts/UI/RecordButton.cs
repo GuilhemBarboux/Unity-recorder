@@ -29,7 +29,7 @@ namespace UI {
 
 		void IPointerDownHandler.OnPointerDown (PointerEventData eventData) {
 			// Start counting
-			StartCoroutine(Countdown());
+			if (!pressed) StartCoroutine(Countdown());
 		}
 
 		void IPointerUpHandler.OnPointerUp (PointerEventData eventData) {
@@ -41,10 +41,11 @@ namespace UI {
 			pressed = true;
 			// First wait a short time to make sure it's not a tap
 			yield return new WaitForSeconds(0.2f);
-			if (!pressed)
-				yield break;
+			if (!pressed) pressed = true; // Was a tapped
+			
 			// Start recording
 			onTouchDown?.Invoke();
+			
 			// Animate the countdown
 			circle.gameObject.SetActive(false);
 			square.gameObject.SetActive(true);
@@ -54,8 +55,10 @@ namespace UI {
 				button.fillAmount = 1f - ratio;
 				yield return null;
 			}
+			
 			// Reset
 			Reset();
+			
 			// Stop recording
 			onTouchUp?.Invoke();
 			circle.gameObject.SetActive(true);
