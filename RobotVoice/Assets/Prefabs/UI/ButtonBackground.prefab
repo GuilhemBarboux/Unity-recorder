@@ -131,7 +131,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d3b66c38c4f4026b8f2d8a2e07164fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  background: {fileID: 11400000, guid: e153f146cd7ac4b12977a6eafd831c0d, type: 2}
+  background: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -205,7 +205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.4, g: 0.4, b: 0.4, a: 0.48235294}
+  m_Color: {r: 0.4, g: 0.4, b: 0.4, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

@@ -22,6 +22,7 @@ namespace UI
         [SerializeField] private Animator[] buttons;
         [SerializeField] private string triggerPanelName;
         [SerializeField] private string triggerButtonName;
+        [SerializeField] private string triggerButtonSelectedName;
         [SerializeField] private GameObject[] menuActions;
         [SerializeField] private GameObject[] recordActions;
         [SerializeField] private GameObject[] replayActions;
@@ -129,8 +130,18 @@ namespace UI
             isTransition = false;
         }
 
+        public void Selected(Animator selected)
+        {
+            selected.SetBool(triggerButtonSelectedName, true);
+        }
+
         public void Toggle(Animator panel)
         {
+            foreach (var button in buttons)
+            {
+                button.SetBool(triggerButtonSelectedName, false);
+            }
+            
             if (panel.GetBool(triggerPanelName))
             {
                 Close();
