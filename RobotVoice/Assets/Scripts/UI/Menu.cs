@@ -27,6 +27,7 @@ namespace UI
         [SerializeField] private GameObject[] recordActions;
         [SerializeField] private GameObject[] replayActions;
         [SerializeField] private GameObject recordButton;
+        [SerializeField] private GameObject hint;
         [SerializeField] private Animator replayAnimator;
         [SerializeField] private TextMeshProUGUI recordTimer;
         [SerializeField] private TextMeshProUGUI restRecordTimer;
@@ -150,6 +151,16 @@ namespace UI
             {
                 Open(panel);
             }
+        }
+
+        public void ShowHint()
+        {
+            hint.SetActive(true);
+        }
+        
+        public void HideHint()
+        {
+            hint.SetActive(false);
         }
 
         private void OnValueChanged(bool value)

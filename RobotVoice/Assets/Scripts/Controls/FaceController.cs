@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using UI;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -11,10 +13,9 @@ namespace Controls
     [RequireComponent(typeof(ARFace))]
     public class FaceController : MonoBehaviour
     {
-        [DllImport("__Internal")]
-        private static extern Quaternion GetFaceRotation(IntPtr ptr);
         private ARFace face;
         private MeshController[] robots;
+        private Menu menu;
         private ARSessionOrigin origin;
 
 #if UNITY_IPHONE
@@ -24,6 +25,7 @@ namespace Controls
         {
             face = GetComponent<ARFace>();
             robots = FindObjectsOfType<MeshController>();
+            menu = FindObjectOfType<Menu>();
             origin = FindObjectOfType<ARSessionOrigin>();
         }
 
@@ -31,12 +33,13 @@ namespace Controls
         { 
             var faceManager = FindObjectOfType<ARFaceManager>();
             if (faceManager == null) return;
-            Debug.Log("A face was found !");
+            
 #if UNITY_IPHONE
             arKitFaceSubsystem = (ARKitFaceSubsystem) faceManager.subsystem;
 #endif
             face.updated += OnFaceUpdated;
             ARSession.stateChanged += OnSessionStateChanged;
+            menu.HideHint();
         }
 
         private void OnFaceUpdated(ARFaceUpdatedEventArgs arFaceUpdatedEventArgs)
@@ -61,10 +64,12 @@ namespace Controls
             
         }
 
-        private void OnDisable()
+        private async void OnDisable()
         {
             face.updated -= OnFaceUpdated;
             ARSession.stateChanged -= OnSessionStateChanged;
+            await Task.Delay(3000);
+            // if (!enabled) menu.ShowHint();
         }
     }
 }
