@@ -6,14 +6,14 @@ using UnityEngine.XR.ARKit;
 
 namespace Controls.editor
 {
-    [CustomEditor(typeof(RobotController))]
+    [CustomEditor(typeof(MeshController))]
     public class RobotControllerEditor : UnityEditor.Editor
     {
-        private RobotController ctrl;
+        private MeshController ctrl;
         private readonly Dictionary<ARKitBlendShapeLocation, float> shapeValues = new Dictionary<ARKitBlendShapeLocation, float>();
         private void OnEnable()
         {
-            ctrl = (RobotController) target;
+            ctrl = (MeshController) target;
             foreach (var ctrlShapeWeight in ctrl.shapeWeights)
             {
                 shapeValues.Add(ctrlShapeWeight.Key, (int)(ctrlShapeWeight.Value * 100));

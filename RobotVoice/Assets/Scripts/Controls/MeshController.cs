@@ -11,7 +11,7 @@ using UnityEngine.XR.ARKit;
 
 namespace Controls
 {
-    public class RobotController : MonoBehaviour
+    public class MeshController : MonoBehaviour
     {
         // Robot meshs
         [SerializeField] private Transform eyeRight;

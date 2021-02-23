@@ -14,7 +14,7 @@ namespace Controls
         [DllImport("__Internal")]
         private static extern Quaternion GetFaceRotation(IntPtr ptr);
         private ARFace face;
-        private RobotController[] robots;
+        private MeshController[] robots;
         private ARSessionOrigin origin;
 
 #if UNITY_IPHONE
@@ -23,7 +23,7 @@ namespace Controls
         private void Awake()
         {
             face = GetComponent<ARFace>();
-            robots = FindObjectsOfType<RobotController>();
+            robots = FindObjectsOfType<MeshController>();
             origin = FindObjectOfType<ARSessionOrigin>();
         }
 

@@ -11,7 +11,7 @@ using UnityEngine.XR.ARKit;
 
 public class Configurator : MonoBehaviour
 {
-    [SerializeField] private RobotController robot;
+    [SerializeField] private MeshController mesh;
     [SerializeField] private GameObject panel;
     [SerializeField] private GameObject indicator;
     [SerializeField] private GameObject view;
@@ -41,13 +41,13 @@ public class Configurator : MonoBehaviour
 
     private void Start()
     {
-        mouth.value = robot.mouthRotationCoefficient;
-        eyes.value = robot.eyeRotationCoefficient;
-        intensity.value = robot.intensityCoefficient * 10f;
-        intialHeadRotation.rotation = robot.head.rotation;
-        headRotation.rotation = robot.head.localRotation;
+        mouth.value = mesh.mouthRotationCoefficient;
+        eyes.value = mesh.eyeRotationCoefficient;
+        intensity.value = mesh.intensityCoefficient * 10f;
+        intialHeadRotation.rotation = mesh.head.rotation;
+        headRotation.rotation = mesh.head.localRotation;
         
-        foreach (var robotShapeWeight in robot.shapeWeights)
+        foreach (var robotShapeWeight in mesh.shapeWeights)
         {
             var n = robotShapeWeight.Key.ToString();
             var i = Instantiate(indicator, panel.transform, true);
@@ -62,22 +62,22 @@ public class Configurator : MonoBehaviour
 
     public void UpdateMouth()
     {
-        if (robot == null) return;
-        robot.mouthRotationCoefficient = mouth.value;
+        if (mesh == null) return;
+        mesh.mouthRotationCoefficient = mouth.value;
         mouthValue.text = mouth.value.ToString(CultureInfo.InvariantCulture);
     }
 
     public void UpdateEyes()
     {
-        if (robot == null) return;
-        robot.eyeRotationCoefficient = eyes.value;
+        if (mesh == null) return;
+        mesh.eyeRotationCoefficient = eyes.value;
         eyesValue.text = eyes.value.ToString(CultureInfo.InvariantCulture);
     }
 
     public void UpdateIntensity()
     {
-        if (robot == null) return;
-        robot.intensityCoefficient = intensity.value / 10;
+        if (mesh == null) return;
+        mesh.intensityCoefficient = intensity.value / 10;
         intensityValue.text = intensity.value.ToString(CultureInfo.InvariantCulture);
     }
 
@@ -85,7 +85,7 @@ public class Configurator : MonoBehaviour
     {
         
 #if UNITY_EDITOR
-        foreach (var robotShapeWeight in robot.shapeWeights)
+        foreach (var robotShapeWeight in mesh.shapeWeights)
         {
             indicators[robotShapeWeight.Key].value.text = robotShapeWeight.Value.ToString(CultureInfo.InvariantCulture);
         }
