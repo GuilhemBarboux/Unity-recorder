@@ -79,19 +79,18 @@ namespace Record
 
         private void OnAudioFilterRead(float[] data, int channels)
         {
-            if (recording)
-                // Save audio sample on all recorders
-                try
-                {
-                    foreach (var mp4Recorder in recorders) mp4Recorder.CommitSamples(data, AudioClock.timestamp);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
+            if (!recording) return;
+            // Save audio sample on all recorders
+            try
+            {
+                foreach (var mp4Recorder in recorders) mp4Recorder.CommitSamples(data, AudioClock.timestamp);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
             // Mute sound to avoid voice return
-            // TODO : on play video, don't mute
             Array.Clear(data, 0, data.Length);
         }
 

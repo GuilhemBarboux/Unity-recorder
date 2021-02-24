@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3309930933109348850}
   - component: {fileID: 3309930933109348849}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Directional Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -102,8 +102,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3309930933192359534}
-  m_Layer: 0
-  m_Name: Processing
+  m_Layer: 7
+  m_Name: Lights
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -137,7 +137,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3309930933701635248}
   - component: {fileID: 3309930933701635255}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Directional Light (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -230,7 +230,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3309930933910461732}
   - component: {fileID: 3309930933910461739}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Reflection Probe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -258,7 +258,7 @@ ReflectionProbe:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3309930933910461738}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Type: 0
   m_Mode: 0
@@ -267,7 +267,7 @@ ReflectionProbe:
   m_Resolution: 128
   m_UpdateFrequency: 0
   m_BoxSize: {x: 10, y: 10, z: 10}
-  m_BoxOffset: {x: 0, y: 0, z: 0}
+  m_BoxOffset: {x: 0, y: 0, z: -5}
   m_NearClip: 0.3
   m_FarClip: 1000
   m_ShadowDistance: 100
@@ -294,7 +294,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3309930934092456404}
   - component: {fileID: 3309930934092456411}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Directional Light (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

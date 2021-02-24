@@ -150,6 +150,10 @@ namespace Controls
             // body.localRotation = bodyRotation * Quaternion.Euler(xRotation, yRotation, 0);
         }
 
+        private static float EaseMouth(float x) {
+            return 1f - Mathf.Pow(1f - x, 4f);;
+        }
+
         private void Update()
         {
             // Eyes rotations
@@ -175,10 +179,8 @@ namespace Controls
             // Mouth
             var mouseOpen = Mathf.Max(shapeWeights[ARKitBlendShapeLocation.JawOpen] -
                                      shapeWeights[ARKitBlendShapeLocation.MouthClose], 0);
-            mouthUp.localRotation = mouthUpRotation;
-            mouthUp.Rotate(360 - mouseOpen * mouthRotationCoefficient * mouthUpCoefficient, 0, 0);
-            mouthDown.localRotation = mouthDownRotation;
-            mouthDown.Rotate(360 + mouseOpen * mouthRotationCoefficient, 0, 0);
+            mouthUp.localRotation = mouthUpRotation * Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(-mouthRotationCoefficient * mouthUpCoefficient, 0, 0), EaseMouth(mouseOpen));
+            mouthDown.localRotation = mouthDownRotation * Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(mouthRotationCoefficient, 0, 0), EaseMouth(mouseOpen));
         }
     }
 }

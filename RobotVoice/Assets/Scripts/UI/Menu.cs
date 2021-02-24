@@ -37,7 +37,7 @@ namespace UI
         public UnityEvent<Material> onBackgroundChanged;
 
         private bool isTransition;
-        private int transitionDuration = 800;
+        private int transitionDuration = 700;
         private IClock clock;
         private bool recording;
         private float recordDuration;
@@ -93,11 +93,15 @@ namespace UI
             restRecordTimer.text = reverseDuration;
         }
 
-        private async Task CloseAll()
+        private void CloseAll()
         {
             var count = panels.Count(panel => panel.GetBool(triggerPanelName));
             if (count <= 0) return;
             
+            foreach (var button in buttons)
+            {
+                button.SetBool(triggerButtonSelectedName, false);
+            }
             foreach (var button in buttons)
             {
                 button.SetBool(triggerButtonName, false);
@@ -106,29 +110,32 @@ namespace UI
             {
                 panel.SetBool(triggerPanelName, false);
             }
-            await Task.Delay(transitionDuration);
         }
 
-        public async void Close()
+        private async void PanelTransition()
         {
-            if (isTransition) return;
             isTransition = true;
-            await CloseAll();
+            await Task.Delay(transitionDuration);
             isTransition = false;
         }
-
-        private async void Open(Animator panel)
+        
+        public void Close()
         {
             if (isTransition) return;
-            isTransition = true;
-            await CloseAll();
+            PanelTransition();
+            CloseAll();
+        }
+
+        private void Open(Animator panel)
+        {
+            if (isTransition) return;
+            PanelTransition();
+            CloseAll();
             panel.SetBool(triggerPanelName, true);
             foreach (var button in buttons)
             {
                 button.SetBool(triggerButtonName, true);
             }
-            await Task.Delay(transitionDuration);
-            isTransition = false;
         }
 
         public void Selected(Animator selected)
@@ -138,11 +145,6 @@ namespace UI
 
         public void Toggle(Animator panel)
         {
-            foreach (var button in buttons)
-            {
-                button.SetBool(triggerButtonSelectedName, false);
-            }
-            
             if (panel.GetBool(triggerPanelName))
             {
                 Close();
@@ -202,7 +204,7 @@ namespace UI
             }
         }
 
-        public async void OnStartRecord()
+        public void OnStartRecord()
         {
             clock = new RealtimeClock();
             recording = true;
@@ -211,7 +213,7 @@ namespace UI
             {
                 action.SetActive(true);
             }
-            await CloseAll();
+            Close();
         }
 
         public void OnStopRecord()
