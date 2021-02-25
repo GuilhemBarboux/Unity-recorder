@@ -30,8 +30,7 @@ namespace Record
         private bool recording; // Recording video
         private bool ready; // Ready to new record
         private IClock clock;
-        private IClock AudioClock;
-        private float timeStart;
+        private IClock audioClock;
 
         // Hack to set sample rate on each microphone record (IOS) 
         [DllImport ("__Internal")]
@@ -79,26 +78,27 @@ namespace Record
 
         private void OnAudioFilterRead(float[] data, int channels)
         {
-            if (!recording) return;
-            // Save audio sample on all recorders
-            try
-            {
-                foreach (var mp4Recorder in recorders) mp4Recorder.CommitSamples(data, AudioClock.timestamp);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
+            if (recording) // Save audio sample on all recorders
+               
+                try
+                {
+                    foreach (var mp4Recorder in recorders) mp4Recorder.CommitSamples(data, audioClock.timestamp);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
 
-            // Mute sound to avoid voice return
-            Array.Clear(data, 0, data.Length);
+            if (!ready)// Mute sound to avoid voice return
+                Array.Clear(data, 0, data.Length);
         }
 
         private IEnumerator StartMicrophone()
         {
             microphoneSource.clip = Microphone.Start(null, true, 60, AudioSettings.outputSampleRate);
             yield return new WaitUntil(() => Microphone.GetPosition(null) > 0);
-            AudioClock = new RealtimeClock();
+            microphoneSource.mute = false;
+            audioClock = new RealtimeClock();
             microphoneSource.Play();
             recording = true;
         }
@@ -113,9 +113,6 @@ namespace Record
 
             // Start microphone
             StartCoroutine(StartMicrophone());
-            
-            // Save timestart to replay video time
-            timeStart = Time.time;
 
             // Create audio and camera input
             clock = new RealtimeClock();
@@ -126,17 +123,18 @@ namespace Record
         {
             // Stop recording
             recording = false;
-            var duration = (Time.time - timeStart) * 1000;
+            var duration = clock.timestamp / 1000000;
 
             // Stop streaming media to the recorder
             cameraInputs.ForEach(ci => ci.Dispose());
-            AudioClock = null;
+            clock = null;
 
             // Stop Microphone
-            await Task.Run(() => new WaitUntil(() => AudioClock.timestamp >= clock.timestamp));
+            await Task.Run(() => new WaitUntil(() => audioClock.timestamp >= clock.timestamp));
             Microphone.End(null);
+            microphoneSource.mute = true;
             microphoneSource.clip = null;
-            clock = null;
+            audioClock = null;
 
             // Finish writing video
             var paths = new string[0];
@@ -157,7 +155,6 @@ namespace Record
             // Share medias
             if (paths.Length > 0)
             {
-                await Task.Run(() => new WaitForEndOfFrame());
 #if UNITY_EDITOR
                 Debug.Log("Record video of duration " + duration + "ms");
 #endif

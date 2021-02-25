@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using NatSuite.Recorders.Clocks;
 using Record;
 using UnityEngine;
 using UnityEngine.Events;
@@ -14,6 +15,7 @@ namespace UI {
 		public UnityEvent onTouchDown, onTouchUp;
 		private bool pressed;
 		private const float MaxRecordingTime = MediaRecorder.MAXDurationS; // seconds
+		private IClock clock;
 
 		private void Start () {
 			Reset();
@@ -45,12 +47,14 @@ namespace UI {
 			
 			// Start recording
 			onTouchDown?.Invoke();
+			clock = new RealtimeClock();
 			
 			// Animate the countdown
 			circle.gameObject.SetActive(false);
 			square.gameObject.SetActive(true);
-			float startTime = Time.time, ratio = 0f;
-			while (pressed && (ratio = (Time.time - startTime) / MaxRecordingTime) < 1.0f) {
+			var ratio = 0f;
+			const float maxTimestamp = MaxRecordingTime * 1000000000;
+			while (pressed && (ratio = clock.timestamp / maxTimestamp) < 1.0f) {
 				countdown.fillAmount = ratio;
 				button.fillAmount = 1f - ratio;
 				yield return null;

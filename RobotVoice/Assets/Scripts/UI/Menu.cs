@@ -84,6 +84,8 @@ namespace UI
             videoPlayer.enabled = false;
             videoPlayer.started += OnVideoReplayLoop;
             videoPlayer.loopPointReached += OnVideoReplayLoop;
+            videoPlayer.SetDirectAudioVolume(0, 1);
+            videoPlayer.SetDirectAudioVolume(1, 1);
         }
 
         private void Update()
@@ -98,10 +100,6 @@ namespace UI
             var count = panels.Count(panel => panel.GetBool(triggerPanelName));
             if (count <= 0) return;
             
-            foreach (var button in buttons)
-            {
-                button.SetBool(triggerButtonSelectedName, false);
-            }
             foreach (var button in buttons)
             {
                 button.SetBool(triggerButtonName, false);
@@ -140,6 +138,10 @@ namespace UI
 
         public void Selected(Animator selected)
         {
+            foreach (var button in buttons)
+            {
+                button.SetBool(triggerButtonSelectedName, false);
+            }
             selected.SetBool(triggerButtonSelectedName, true);
         }
 
